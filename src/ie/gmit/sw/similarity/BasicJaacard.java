@@ -1,4 +1,4 @@
-package ie.gmit.sw.simularity;
+package ie.gmit.sw.similarity;
 
 import ie.gmit.sw.Document;
 
