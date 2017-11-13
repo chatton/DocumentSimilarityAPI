@@ -1,5 +1,5 @@
 package ie.gmit.sw.simularity;
 
-public interface SimularityIndex {
+public interface SimilarityIndex {
     double computeIndex();
 }

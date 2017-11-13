@@ -2,7 +2,7 @@ package ie.gmit.sw.simularity;
 
 import ie.gmit.sw.Document;
 
-public class Jaacard implements SimularityIndex {
+public class Jaacard implements SimilarityIndex {
 
     private final Document doc1;
     private final Document doc2;
