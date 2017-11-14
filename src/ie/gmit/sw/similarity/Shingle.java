@@ -1,30 +1,26 @@
 package ie.gmit.sw.similarity;
 
 
-import java.util.Collections;
-import java.util.List;
-
 public class Shingle {
-
-    private final List<String> words;
     private final int docId;
+    private final String text;
 
-    public Shingle(final List<String> words, final int docId) {
-        this.words = Collections.unmodifiableList(words);
+    public Shingle(final String text, final int docId) {
         this.docId = docId;
+        this.text = text;
     }
 
     public int getDocId() {
         return docId;
     }
 
-    public List<String> getWords() {
-        return words;
+    public String getText() {
+        return text;
     }
 
     @Override
-    public String toString(){
-        return String.format("Shingle{docId=%s, words=%s}", docId, words);
+    public String toString() {
+        return String.format("Shingle{docId=%s, text=%s}", docId, text);
     }
 
 }
