@@ -1,4 +1,4 @@
-package ie.gmit.sw;
+package ie.gmit.sw.documents;
 
 public class Document {
     private final String text;
