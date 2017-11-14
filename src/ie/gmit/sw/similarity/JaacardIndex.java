@@ -5,12 +5,12 @@ import ie.gmit.sw.MinHash;
 
 import java.util.*;
 
-public class BasicJaacard implements SimilarityIndex {
+public class JaacardIndex implements SimilarityIndex {
 
     private final Document doc1;
     private final Document doc2;
 
-    public BasicJaacard(final Document doc1, final Document doc2) {
+    public JaacardIndex(final Document doc1, final Document doc2) {
         this.doc1 = doc1;
         this.doc2 = doc2;
     }
@@ -21,7 +21,7 @@ public class BasicJaacard implements SimilarityIndex {
         Random rnd = new Random();
         Set<Integer> hashes = new TreeSet<>();
 
-        int k = 100;
+        int k = 2000;
         for (int i = 0; i < k; i++) {
             hashes.add(rnd.nextInt());
         }
