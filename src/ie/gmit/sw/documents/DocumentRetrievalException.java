@@ -2,7 +2,7 @@ package ie.gmit.sw.documents;
 
 public class DocumentRetrievalException  extends Exception{
 
-    public DocumentRetrievalException(String msg){
+    public DocumentRetrievalException(final String msg){
         super(msg);
     }
 

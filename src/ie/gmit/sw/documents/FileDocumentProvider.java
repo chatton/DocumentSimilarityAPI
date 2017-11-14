@@ -9,7 +9,7 @@ public class FileDocumentProvider implements DocumentProvider {
 
     private final String pathToFile;
 
-    public FileDocumentProvider(String pathToFile) {
+    public FileDocumentProvider(final String pathToFile) {
         this.pathToFile = pathToFile;
     }
 
