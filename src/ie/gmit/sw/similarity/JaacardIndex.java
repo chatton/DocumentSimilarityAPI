@@ -8,16 +8,14 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 
 public class JaacardIndex implements SimilarityIndex {
 
-    private final Document doc1;
-    private final Document doc2;
+    private final List<Document> documents;
     private final Queue<Shingle> shingles;
     private final Map<Integer, List<Integer>> shingleHashes;
     private final int k;
 
-    public JaacardIndex(final Document doc1, final Document doc2) {
-        this.doc1 = doc1;
-        this.doc2 = doc2;
-        k = 1000;
+    public JaacardIndex(final List<Document> documents) {
+        this.documents = Collections.unmodifiableList(documents);
+        k = 100; // TODO remove hard coded value.
         shingles = new ConcurrentLinkedQueue<>();
         shingleHashes = new ConcurrentHashMap<>();
     }
@@ -32,58 +30,60 @@ public class JaacardIndex implements SimilarityIndex {
     }
 
     private void shinglize() {
-        List<Thread> threads = new ArrayList<>();
-
-        Thread doc1Thread = new Thread(new Shinglizer(doc1, 10));
-        Thread doc2Thread = new Thread(new Shinglizer(doc2, 10));
-
-        threads.add(doc1Thread);
-        threads.add(doc2Thread);
-
-        doc1Thread.start();
-        doc2Thread.start();
-
-        try {
-            for (Thread thread : threads) {
-                thread.join();
-            }
-        } catch (InterruptedException e) {
-            e.printStackTrace();
+        for (Document doc : documents) {
+            Thread thread = new Thread(new Shinglizer(doc, 10));
+            thread.start();
         }
     }
 
     @Override
     public double computeIndex() {
 
+        // starts 1 thread per document breaking each one into shingles
         shinglize();
 
-//        Set<Integer> hashes = generateHashes();
-//        List<Thread> minHashThreads = new ArrayList<>();
+        Set<Integer> hashes = generateHashes(); // generates k hash functions
 
-//        while (!shingles.isEmpty()) {
-//            List<Shingle> shingleList = shingles.poll();
-//            for (Integer hash : hashes) {
-//                Thread minThread = new Thread(new MinHash(shingleList, hash));
-//                minHashThreads.add(minThread);
-//                minThread.start();
-//            }
-//        }
+        List<Thread> minHashThreads = new ArrayList<>();
+        List<MinHash> minHashTasks = new ArrayList<>();
 
-//        for (Thread thread : minHashThreads) {
-//            try {
-//                thread.join(); // all min hashes are done being calculated.
-//            } catch (InterruptedException e) {
-//                e.printStackTrace();
-//            }
-//        }
+        for (Document doc : documents) { // each document has it's own k threads
+            for (Integer hash : hashes) { // create one thread per hash.
+                MinHash minHash = new MinHash(hash, doc.getId());
+                minHashTasks.add(minHash); // need to keep task reference to add shingles.
+                Thread minHashThread = new Thread(minHash);
+                minHashThreads.add(minHashThread);
+                minHashThread.start();
+            }
+        }
 
-//        Set<Integer> doc1MinHashes = new HashSet<>(shingleHashes.get(doc1.getId()));
-//        Set<Integer> doc2MinHashes = new HashSet<>(shingleHashes.get(doc2.getId()));
-//
-//        doc1MinHashes.retainAll(doc2MinHashes);
-//        return (double) (doc1MinHashes.size()) / k;
+        int completedCount = 0;
+        while (completedCount != documents.size()) {
+            if (!shingles.isEmpty()) {
+                Shingle shingle = shingles.poll();
+                if (shingle.isPoison()) { // expecting 1 PoisonShingle per document.
+                    completedCount++;
+                }
+
+                minHashTasks.forEach(minHash -> minHash.addShingle(shingle));
+            }
+        }
+        joinThreads(minHashThreads);
+
+
+        // TODO calculate JaacardIndex with resulting hash shingles.
         return 0;
 
+    }
+
+    private void joinThreads(List<Thread> threads) {
+        for (Thread thread : threads) {
+            try {
+                thread.join();
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        }
     }
 
     private class Shinglizer implements Runnable {
@@ -102,45 +102,77 @@ public class JaacardIndex implements SimilarityIndex {
             StringBuilder sb = new StringBuilder();
             String[] words = text.split("[ -.,;:\\-]+");
             int pos = 0;
+            int num = 1;
             while (pos < words.length) {
                 for (int i = 0; i < shingleLength; i++) {
-                    if(pos == words.length){
+                    if (pos == words.length) {
                         break;
                     }
                     sb.append(words[pos]).append(" ");
-
                     pos++;
-                }
-                System.out.println(sb.toString());
-                Shingle shingle = new Shingle(sb.toString(), document.getId());
+                } // for
+
+                Shingle shingle = new Shingle(sb.toString(), document.getId(), num++);
                 shingles.offer(shingle);
                 sb = new StringBuilder();
-            }
+            } // while
+
+            // signal completion
+            shingles.offer(new PoisonShingle("Poison", document.getId(), num));
         }
     }
 
     private class MinHash implements Runnable {
 
-        private final List<Shingle> shingles;
+        private final Queue<Shingle> shingleQueue;
         private final int hash;
+        private final int docId;
+        private int minHash;
+        private int totalNumShingles = -1;
+        private int numProcessed = 0;
 
-        public MinHash(final List<Shingle> shingles, final int hash) {
-            this.shingles = shingles;
-            this.hash = hash;
+        public void addShingle(Shingle shingle) {
+            // ignore any shingles not for this thread.
+            if (shingle.getDocId() != docId) {
+                return;
+            }
+            if (shingle.isPoison()) {
+                totalNumShingles = shingle.getNumber() - 1;
+                return;
+            }
+            // only deal with threads for the document we care about.
+            shingleQueue.offer(shingle);
         }
 
-        private int getMinHash() {
-            return shingles.stream()
-                    .mapToInt(shingle -> shingle.hashCode() ^ hash)
-                    .min()
-                    .orElse(Integer.MAX_VALUE);
+        public MinHash(final int hash, final int docId) {
+            this.docId = docId;
+            this.hash = hash;
+            minHash = Integer.MAX_VALUE;
+            shingleQueue = new ConcurrentLinkedQueue<>();
+        }
+
+        private boolean done() {
+            if (totalNumShingles == -1) { // haven't found Poison yet, so we don't know how many shingles there will be in total.
+                return false;
+            }
+            return numProcessed == totalNumShingles;
         }
 
         @Override
         public void run() {
-            int minHash = getMinHash();
-            shingleHashes.computeIfAbsent(shingles.get(0).getDocId(), val -> new ArrayList<>());
-            shingleHashes.get(shingles.get(0).getDocId()).add(minHash);
+            while (!done()) {
+                if (!shingleQueue.isEmpty()) {
+                    Shingle next = shingleQueue.poll();
+                    numProcessed++;
+                    int nextHash = next.hashCode() ^ hash;
+                    if (nextHash < minHash) {
+                        minHash = nextHash;
+                    }
+                }
+            } // while
+
+            assert minHash != Integer.MAX_VALUE;
+            // TODO add the shingle to a list for this document.
         }
     }
 }
