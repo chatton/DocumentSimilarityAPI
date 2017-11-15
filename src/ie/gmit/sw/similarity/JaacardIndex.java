@@ -6,30 +6,21 @@ import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
-
 public class JaacardIndex implements SimilarityIndex {
 
     private final Document doc1;
     private final Document doc2;
-    private final Queue<List<Shingle>> shingles;
+    private final Queue<Shingle> shingles;
     private final Map<Integer, List<Integer>> shingleHashes;
     private final int k;
-//    private final ExecutorService service;
 
     public JaacardIndex(final Document doc1, final Document doc2) {
         this.doc1 = doc1;
         this.doc2 = doc2;
-        k = 250;
+        k = 1000;
         shingles = new ConcurrentLinkedQueue<>();
         shingleHashes = new ConcurrentHashMap<>();
-//        service = Executors.newFixedThreadPool(8);
     }
-
-//    private List<Shingle> getDocumentShingles(Document document) {
-//        return shingles.stream()
-//                .filter(shingle -> shingle.getDocId() == document.getId())
-//                .collect(Collectors.toList());
-//    }
 
     private Set<Integer> generateHashes() {
         Random rnd = new Random();
@@ -43,8 +34,8 @@ public class JaacardIndex implements SimilarityIndex {
     private void shinglize() {
         List<Thread> threads = new ArrayList<>();
 
-        Thread doc1Thread = new Thread(new Shinglizer(doc1, 5));
-        Thread doc2Thread = new Thread(new Shinglizer(doc2, 5));
+        Thread doc1Thread = new Thread(new Shinglizer(doc1, 10));
+        Thread doc2Thread = new Thread(new Shinglizer(doc2, 10));
 
         threads.add(doc1Thread);
         threads.add(doc2Thread);
@@ -66,30 +57,32 @@ public class JaacardIndex implements SimilarityIndex {
 
         shinglize();
 
-        Set<Integer> hashes = generateHashes();
-        List<Thread> minHashThreads = new ArrayList<>();
-        while (!shingles.isEmpty()) {
-            List<Shingle> shingleList = shingles.poll();
-            for (Integer hash : hashes) {
-                Thread minThread = new Thread(new MinHash(shingleList, hash));
-                minHashThreads.add(minThread);
-                minThread.start();
-            }
-        }
+//        Set<Integer> hashes = generateHashes();
+//        List<Thread> minHashThreads = new ArrayList<>();
 
-        for (Thread thread : minHashThreads) {
-            try {
-                thread.join(); // all min hashes are done being calculated.
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
-        }
+//        while (!shingles.isEmpty()) {
+//            List<Shingle> shingleList = shingles.poll();
+//            for (Integer hash : hashes) {
+//                Thread minThread = new Thread(new MinHash(shingleList, hash));
+//                minHashThreads.add(minThread);
+//                minThread.start();
+//            }
+//        }
 
-        Set<Integer> doc1MinHashes = new HashSet<>(shingleHashes.get(doc1.getId()));
-        Set<Integer> doc2MinHashes = new HashSet<>(shingleHashes.get(doc2.getId()));
+//        for (Thread thread : minHashThreads) {
+//            try {
+//                thread.join(); // all min hashes are done being calculated.
+//            } catch (InterruptedException e) {
+//                e.printStackTrace();
+//            }
+//        }
 
-        doc1MinHashes.retainAll(doc2MinHashes);
-        return (double) (doc1MinHashes.size()) / k;
+//        Set<Integer> doc1MinHashes = new HashSet<>(shingleHashes.get(doc1.getId()));
+//        Set<Integer> doc2MinHashes = new HashSet<>(shingleHashes.get(doc2.getId()));
+//
+//        doc1MinHashes.retainAll(doc2MinHashes);
+//        return (double) (doc1MinHashes.size()) / k;
+        return 0;
 
     }
 
@@ -105,21 +98,24 @@ public class JaacardIndex implements SimilarityIndex {
 
         @Override
         public void run() {
-            String text = document.getText();
+            String text = document.getText().toLowerCase();
             StringBuilder sb = new StringBuilder();
-            List<Shingle> listOfShingles = new ArrayList<>();
+            String[] words = text.split("[ -.,;:\\-]+");
             int pos = 0;
-            while (pos < text.length()) {
+            while (pos < words.length) {
                 for (int i = 0; i < shingleLength; i++) {
-                    if (pos == text.length()) {
+                    if(pos == words.length){
                         break;
                     }
-                    sb.append(text.charAt(pos++));
+                    sb.append(words[pos]).append(" ");
+
+                    pos++;
                 }
-                listOfShingles.add(new Shingle(sb.toString(), document.getId()));
+                System.out.println(sb.toString());
+                Shingle shingle = new Shingle(sb.toString(), document.getId());
+                shingles.offer(shingle);
                 sb = new StringBuilder();
             }
-            shingles.offer(listOfShingles);
         }
     }
 
@@ -135,8 +131,7 @@ public class JaacardIndex implements SimilarityIndex {
 
         private int getMinHash() {
             return shingles.stream()
-                    .map(Shingle::getText)
-                    .mapToInt(word -> word.hashCode() ^ hash)
+                    .mapToInt(shingle -> shingle.hashCode() ^ hash)
                     .min()
                     .orElse(Integer.MAX_VALUE);
         }
@@ -148,5 +143,4 @@ public class JaacardIndex implements SimilarityIndex {
             shingleHashes.get(shingles.get(0).getDocId()).add(minHash);
         }
     }
-
 }

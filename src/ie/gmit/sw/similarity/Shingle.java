@@ -14,8 +14,9 @@ public class Shingle {
         return docId;
     }
 
-    public String getText() {
-        return text;
+    @Override
+    public int hashCode(){
+        return text.hashCode();
     }
 
     @Override
