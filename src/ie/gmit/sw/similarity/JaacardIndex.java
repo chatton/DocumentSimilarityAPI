@@ -1,23 +1,26 @@
 package ie.gmit.sw.similarity;
 
+
 import ie.gmit.sw.documents.Document;
 
 import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.concurrent.*;
+import java.util.stream.Collectors;
 
 public class JaacardIndex implements SimilarityIndex {
 
     private final List<Document> documents;
-    private final Queue<Shingle> shingles;
-    private final Map<Integer, List<Integer>> shingleHashes;
+    private final ExecutorService executor;
     private final int k;
+//    private final Shinglizer shinglizer;
 
     public JaacardIndex(final List<Document> documents) {
         this.documents = Collections.unmodifiableList(documents);
-        k = 100; // TODO remove hard coded value.
-        shingles = new ConcurrentLinkedQueue<>();
-        shingleHashes = new ConcurrentHashMap<>();
+        k = 150; // TODO remove hard coded value.
+//        shingles = new ConcurrentLinkedQueue<>();
+//        shingleHashes = new ConcurrentHashMap<>();
+        executor = Executors.newFixedThreadPool(8);
+//        this.shinglizer = new WordShinglizer()
     }
 
     private Set<Integer> generateHashes() {
@@ -29,150 +32,69 @@ public class JaacardIndex implements SimilarityIndex {
         return hashes;
     }
 
-    private void shinglize() {
-        for (Document doc : documents) {
-            Thread thread = new Thread(new Shinglizer(doc, 10));
-            thread.start();
+
+    private List<Shingle> getShingleListFromFuture(final Future<List<Shingle>> future) {
+        try {
+            return future.get();
+        } catch (InterruptedException | ExecutionException e) {
+            e.printStackTrace();
+            return null;
         }
+    }
+
+    private MinHashResult getMinHashResultFromFuture(final Future<MinHashResult> future) {
+        try {
+            return future.get();
+        } catch (InterruptedException | ExecutionException e) {
+            e.printStackTrace();
+            return null;
+        }
+    }
+
+    private List<List<Shingle>> shinglize() {
+        return documents
+                .stream()
+                .map(doc -> executor.submit(new WordShinglizer(doc, 10)))
+                .map(this::getShingleListFromFuture)
+                .collect(Collectors.toList());
     }
 
     @Override
     public double computeIndex() {
 
-        // starts 1 thread per document breaking each one into shingles
-        shinglize();
+        List<List<Shingle>> shingles = shinglize();
 
-        Set<Integer> hashes = generateHashes(); // generates k hash functions
+        Set<Integer> hashes = generateHashes();
 
-        List<Thread> minHashThreads = new ArrayList<>();
-        List<MinHash> minHashTasks = new ArrayList<>();
-
-        for (Document doc : documents) { // each document has it's own k threads
-            for (Integer hash : hashes) { // create one thread per hash.
-                MinHash minHash = new MinHash(hash, doc.getId());
-                minHashTasks.add(minHash); // need to keep task reference to add shingles.
-                Thread minHashThread = new Thread(minHash);
-                minHashThreads.add(minHashThread);
-                minHashThread.start();
+        List<Future<MinHashResult>> minHashes = new ArrayList<>();
+        for (List<Shingle> shinglesList : shingles) {
+            for (Integer hash : hashes) {
+                minHashes.add(executor.submit(new MinHash(hash, shinglesList, shinglesList.get(0).getDocId())));
             }
         }
 
-        int completedCount = 0;
-        while (completedCount != documents.size()) {
-            if (!shingles.isEmpty()) {
-                Shingle shingle = shingles.poll();
-                if (shingle.isPoison()) { // expecting 1 PoisonShingle per document.
-                    completedCount++;
-                }
-
-                minHashTasks.forEach(minHash -> minHash.addShingle(shingle));
-            }
-        }
-        joinThreads(minHashThreads);
-
-
-        // TODO calculate JaacardIndex with resulting hash shingles.
-        return 0;
-
-    }
-
-    private void joinThreads(List<Thread> threads) {
-        for (Thread thread : threads) {
-            try {
-                thread.join();
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
-        }
-    }
-
-    private class Shinglizer implements Runnable {
-
-        private final Document document;
-        private final int shingleLength;
-
-        private Shinglizer(final Document document, final int shingleLength) {
-            this.document = document;
-            this.shingleLength = shingleLength;
+        Map<Integer, Set<Integer>> minHashResults = new HashMap<>();
+        for (Document doc : documents) {
+            minHashResults.put(doc.getId(), new HashSet<>());
         }
 
-        @Override
-        public void run() {
-            String text = document.getText().toLowerCase();
-            StringBuilder sb = new StringBuilder();
-            String[] words = text.split("[ -.,;:\\-]+");
-            int pos = 0;
-            int num = 1;
-            while (pos < words.length) {
-                for (int i = 0; i < shingleLength; i++) {
-                    if (pos == words.length) {
-                        break;
-                    }
-                    sb.append(words[pos]).append(" ");
-                    pos++;
-                } // for
+        minHashes.stream()
+                .map(this::getMinHashResultFromFuture)
+                .forEach(result -> {
+                    Set<Integer> results = minHashResults.get(result.getDocId());
+                    results.add(result.getResult());
+                });
 
-                Shingle shingle = new Shingle(sb.toString(), document.getId(), num++);
-                shingles.offer(shingle);
-                sb = new StringBuilder();
-            } // while
+        executor.shutdown();
 
-            // signal completion
-            shingles.offer(new PoisonShingle("Poison", document.getId(), num));
-        }
-    }
-
-    private class MinHash implements Runnable {
-
-        private final Queue<Shingle> shingleQueue;
-        private final int hash;
-        private final int docId;
-        private int minHash;
-        private int totalNumShingles = -1;
-        private int numProcessed = 0;
-
-        public void addShingle(Shingle shingle) {
-            // ignore any shingles not for this thread.
-            if (shingle.getDocId() != docId) {
-                return;
-            }
-            if (shingle.isPoison()) {
-                totalNumShingles = shingle.getNumber() - 1;
-                return;
-            }
-            // only deal with threads for the document we care about.
-            shingleQueue.offer(shingle);
+        Set<Integer> finalResults = new HashSet<>(minHashResults.get(1));
+        for (Set set : minHashResults.values()) {
+            finalResults.retainAll(set);
+            System.out.println(set.size());
         }
 
-        public MinHash(final int hash, final int docId) {
-            this.docId = docId;
-            this.hash = hash;
-            minHash = Integer.MAX_VALUE;
-            shingleQueue = new ConcurrentLinkedQueue<>();
-        }
+        System.out.println(finalResults);
+        return (double) finalResults.size() / k;
 
-        private boolean done() {
-            if (totalNumShingles == -1) { // haven't found Poison yet, so we don't know how many shingles there will be in total.
-                return false;
-            }
-            return numProcessed == totalNumShingles;
-        }
-
-        @Override
-        public void run() {
-            while (!done()) {
-                if (!shingleQueue.isEmpty()) {
-                    Shingle next = shingleQueue.poll();
-                    numProcessed++;
-                    int nextHash = next.hashCode() ^ hash;
-                    if (nextHash < minHash) {
-                        minHash = nextHash;
-                    }
-                }
-            } // while
-
-            assert minHash != Integer.MAX_VALUE;
-            // TODO add the shingle to a list for this document.
-        }
     }
 }
