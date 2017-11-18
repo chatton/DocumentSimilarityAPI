@@ -3,17 +3,10 @@ package ie.gmit.sw.similarity.shingles;
 
 public class Shingle {
 
-    private final int docId;
     private final String text;
 
-    public Shingle(final String text, final int docId) {
-        this.docId = docId;
+    public Shingle(final String text) {
         this.text = text;
-    }
-
-
-    public int getDocId() {
-        return docId;
     }
 
     @Override
@@ -23,6 +16,6 @@ public class Shingle {
 
     @Override
     public String toString() {
-        return String.format("Shingle{docId=%s, text=%s}", docId, text);
+        return String.format("Shingle{text=%s}", text);
     }
 }

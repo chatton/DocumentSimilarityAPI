@@ -35,12 +35,7 @@ public class FileDocument implements Document {
     }
 
     @Override
-    public String getText() {
+    public String text() {
         return text;
-    }
-
-    @Override
-    public int getId() {
-        return id;
     }
 }

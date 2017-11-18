@@ -4,11 +4,14 @@ import ie.gmit.sw.documents.Document;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 public class WordShinglizer implements Shinglizer {
 
     private final int numWords;
     private final String pattern;
+    private final Map<Document, ShinglizeResult> results;
 
     public WordShinglizer(final int numWords) {
         this(numWords, "[ -.,;:\\-]+");
@@ -17,15 +20,22 @@ public class WordShinglizer implements Shinglizer {
     public WordShinglizer(final int numWords, final String pattern) {
         this.numWords = numWords;
         this.pattern = pattern;
+        this.results = new ConcurrentHashMap<>();
     }
 
     @Override
     public ShinglizeResult shinglize(Document document) {
-        String text = document.getText().toLowerCase();
-        StringBuilder sb = new StringBuilder();
-        String[] words = text.split(pattern);
+
+        if (results.containsKey(document)) {
+            return results.get(document);
+        }
+
+        final String text = document.text().toLowerCase();
+        final String[] words = text.split(pattern);
+
         int pos = 0;
-        List<Shingle> shingles = new ArrayList<>();
+        final StringBuilder sb = new StringBuilder();
+        final List<Shingle> shingles = new ArrayList<>();
         while (pos < words.length) {
             for (int i = 0; i < numWords; i++) {
                 if (pos == words.length) {
@@ -33,12 +43,15 @@ public class WordShinglizer implements Shinglizer {
                 }
                 sb.append(words[pos]).append(" ");
                 pos++;
-            } // for
+            }
 
-            Shingle shingle = new Shingle(sb.toString(), document.getId());
+            final Shingle shingle = new Shingle(sb.toString());
             shingles.add(shingle);
-            sb = new StringBuilder();
-        } // while
-        return new ShinglizeResult(document, shingles);
+            sb.setLength(0); // clear the string builder.
+        }
+
+        ShinglizeResult result = new ShinglizeResult(document, shingles);
+        results.put(document, result);
+        return result;
     }
 }
