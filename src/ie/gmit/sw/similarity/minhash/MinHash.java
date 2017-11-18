@@ -1,4 +1,7 @@
-package ie.gmit.sw.similarity;
+package ie.gmit.sw.similarity.minhash;
+
+import ie.gmit.sw.documents.Document;
+import ie.gmit.sw.similarity.shingles.Shingle;
 
 import java.util.List;
 import java.util.concurrent.Callable;
@@ -7,12 +10,12 @@ public class MinHash implements Callable<MinHashResult> {
 
     private final int hash;
     private final List<Shingle> shingles;
-    private final int docId;
+    private final Document document;
 
-    public MinHash(final int hash, final List<Shingle> shingles, final int docId) {
+    public MinHash(final int hash, final List<Shingle> shingles, final Document document) {
         this.hash = hash;
         this.shingles = shingles;
-        this.docId = docId;
+        this.document = document;
     }
 
     @Override
@@ -22,6 +25,6 @@ public class MinHash implements Callable<MinHashResult> {
                 .min()
                 .orElse(Integer.MAX_VALUE);
 
-        return new MinHashResult(minHash, docId);
+        return new MinHashResult(minHash, document);
     }
 }

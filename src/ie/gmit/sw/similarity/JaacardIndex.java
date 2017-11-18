@@ -2,6 +2,10 @@ package ie.gmit.sw.similarity;
 
 
 import ie.gmit.sw.documents.Document;
+import ie.gmit.sw.similarity.minhash.MinHash;
+import ie.gmit.sw.similarity.minhash.MinHashResult;
+import ie.gmit.sw.similarity.shingles.ShinglizeResult;
+import ie.gmit.sw.similarity.shingles.Shinglizer;
 
 import java.util.*;
 import java.util.concurrent.*;
@@ -12,15 +16,16 @@ public class JaacardIndex implements SimilarityIndex {
     private final List<Document> documents;
     private final ExecutorService executor;
     private final int k;
-//    private final Shinglizer shinglizer;
+    private final Shinglizer shinglizer;
 
-    public JaacardIndex(final List<Document> documents) {
+    public JaacardIndex(final List<Document> documents, final Shinglizer shinglizer) {
+        if (documents.size() < 2) {
+            throw new IllegalArgumentException("You must provide at least 2 documents to compare.");
+        }
         this.documents = Collections.unmodifiableList(documents);
         k = 150; // TODO remove hard coded value.
-//        shingles = new ConcurrentLinkedQueue<>();
-//        shingleHashes = new ConcurrentHashMap<>();
         executor = Executors.newFixedThreadPool(8);
-//        this.shinglizer = new WordShinglizer()
+        this.shinglizer = shinglizer;
     }
 
     private Set<Integer> generateHashes() {
@@ -33,7 +38,7 @@ public class JaacardIndex implements SimilarityIndex {
     }
 
 
-    private List<Shingle> getShingleListFromFuture(final Future<List<Shingle>> future) {
+    private Object getResultFromFuture(final Future future) {
         try {
             return future.get();
         } catch (InterruptedException | ExecutionException e) {
@@ -42,58 +47,61 @@ public class JaacardIndex implements SimilarityIndex {
         }
     }
 
-    private MinHashResult getMinHashResultFromFuture(final Future<MinHashResult> future) {
-        try {
-            return future.get();
-        } catch (InterruptedException | ExecutionException e) {
-            e.printStackTrace();
-            return null;
-        }
+    private ShinglizeResult getShinglizeResult(final Future<ShinglizeResult> future) {
+        return (ShinglizeResult) getResultFromFuture(future);
     }
 
-    private List<List<Shingle>> shinglize() {
-        return documents
+    private MinHashResult getMinHashResult(final Future<MinHashResult> future) {
+        return (MinHashResult) getResultFromFuture(future);
+    }
+
+    private List<ShinglizeResult> shinglize() {
+        List<Future<ShinglizeResult>> futures = documents
                 .stream()
-                .map(doc -> executor.submit(new WordShinglizer(doc, 10)))
-                .map(this::getShingleListFromFuture)
+                .map(doc -> executor.submit(() -> shinglizer.shinglize(doc)))
                 .collect(Collectors.toList());
+
+        return futures.stream()
+                .map(this::getShinglizeResult)
+                .collect(Collectors.toList());
+
     }
 
     @Override
     public double computeIndex() {
 
-        List<List<Shingle>> shingles = shinglize();
-
+        List<ShinglizeResult> shingles = shinglize();
         Set<Integer> hashes = generateHashes();
 
         List<Future<MinHashResult>> minHashes = new ArrayList<>();
-        for (List<Shingle> shinglesList : shingles) {
+        for (ShinglizeResult shinglizeResult : shingles) {
             for (Integer hash : hashes) {
-                minHashes.add(executor.submit(new MinHash(hash, shinglesList, shinglesList.get(0).getDocId())));
+                minHashes.add(executor.submit(new MinHash(
+                                hash, shinglizeResult.getResult(), shinglizeResult.getDocument())
+                        )
+                );
             }
         }
 
-        Map<Integer, Set<Integer>> minHashResults = new HashMap<>();
+        Map<Document, Set<Integer>> minHashResults = new HashMap<>();
         for (Document doc : documents) {
-            minHashResults.put(doc.getId(), new HashSet<>());
+            minHashResults.put(doc, new HashSet<>());
         }
 
         minHashes.stream()
-                .map(this::getMinHashResultFromFuture)
+                .map(this::getMinHashResult)
                 .forEach(result -> {
-                    Set<Integer> results = minHashResults.get(result.getDocId());
+                    Set<Integer> results = minHashResults.get(result.getDocument());
                     results.add(result.getResult());
                 });
 
         executor.shutdown();
 
-        Set<Integer> finalResults = new HashSet<>(minHashResults.get(1));
+        Set<Integer> finalResults = new HashSet<>(minHashResults.get(documents.get(0)));
         for (Set set : minHashResults.values()) {
             finalResults.retainAll(set);
-            System.out.println(set.size());
         }
 
-        System.out.println(finalResults);
         return (double) finalResults.size() / k;
 
     }

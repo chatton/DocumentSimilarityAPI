@@ -1,4 +1,4 @@
-package ie.gmit.sw.similarity;
+package ie.gmit.sw.similarity.shingles;
 
 
 public class Shingle {
