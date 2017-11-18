@@ -76,9 +76,8 @@ public class JaacardIndex implements SimilarityIndex {
         List<Future<MinHashResult>> minHashes = new ArrayList<>();
         for (ShinglizeResult shinglizeResult : shingles) {
             for (Integer hash : hashes) {
-                minHashes.add(executor.submit(new MinHash(
-                                hash, shinglizeResult.getResult(), shinglizeResult.getDocument())
-                        )
+                minHashes.add(executor.submit(() -> new MinHash(
+                        hash, shinglizeResult.getResult(), shinglizeResult.getDocument()).calculate())
                 );
             }
         }

@@ -4,9 +4,8 @@ import ie.gmit.sw.documents.Document;
 import ie.gmit.sw.similarity.shingles.Shingle;
 
 import java.util.List;
-import java.util.concurrent.Callable;
 
-public class MinHash implements Callable<MinHashResult> {
+public class MinHash  {
 
     private final int hash;
     private final List<Shingle> shingles;
@@ -18,8 +17,7 @@ public class MinHash implements Callable<MinHashResult> {
         this.document = document;
     }
 
-    @Override
-    public MinHashResult call() {
+    public MinHashResult calculate() {
         int minHash = shingles.parallelStream()
                 .mapToInt(shingle -> shingle.hashCode() ^ hash)
                 .min()
