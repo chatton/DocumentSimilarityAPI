@@ -4,14 +4,11 @@ import ie.gmit.sw.documents.Document;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
 
 public class WordShinglizer implements Shinglizer {
 
     private final int numWords;
     private final String pattern;
-    private final Map<Document, ShinglizeResult> results;
 
     public WordShinglizer(final int numWords) {
         this(numWords, "[ -.,;:\\-]+");
@@ -20,15 +17,10 @@ public class WordShinglizer implements Shinglizer {
     public WordShinglizer(final int numWords, final String pattern) {
         this.numWords = numWords;
         this.pattern = pattern;
-        this.results = new ConcurrentHashMap<>();
     }
 
     @Override
     public ShinglizeResult shinglize(Document document) {
-
-        if (results.containsKey(document)) {
-            return results.get(document);
-        }
 
         final String text = document.text().toLowerCase();
         final String[] words = text.split(pattern);
@@ -50,8 +42,6 @@ public class WordShinglizer implements Shinglizer {
             sb.setLength(0); // clear the string builder.
         }
 
-        ShinglizeResult result = new ShinglizeResult(document, shingles);
-        results.put(document, result);
-        return result;
+        return new ShinglizeResult(document, shingles);
     }
 }

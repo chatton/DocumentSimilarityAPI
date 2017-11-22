@@ -18,7 +18,7 @@ public class MinHash  {
     }
 
     public MinHashResult calculate() {
-        final int minHash = shingles.parallelStream()
+        final int minHash = shingles.stream()
                 .mapToInt(shingle -> shingle.hashCode() ^ hash)
                 .min()
                 .orElse(Integer.MAX_VALUE);

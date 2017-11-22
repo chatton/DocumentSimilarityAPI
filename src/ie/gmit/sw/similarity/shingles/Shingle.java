@@ -4,14 +4,16 @@ package ie.gmit.sw.similarity.shingles;
 public class Shingle {
 
     private final String text;
+    private final int hashCode;
 
     public Shingle(final String text) {
         this.text = text;
+        this.hashCode = text.hashCode();
     }
 
     @Override
     public int hashCode() {
-        return text.hashCode();
+        return hashCode;
     }
 
     @Override

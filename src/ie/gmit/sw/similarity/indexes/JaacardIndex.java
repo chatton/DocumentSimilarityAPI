@@ -8,7 +8,6 @@ import ie.gmit.sw.similarity.shingles.ShinglizeResult;
 import ie.gmit.sw.similarity.shingles.Shinglizer;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -25,18 +24,13 @@ import static java.util.stream.Collectors.toSet;
 
 public class JaacardIndex implements SimilarityIndex {
 
-    private final List<Document> documents;
     private final Shinglizer shinglizer;
     private final int numHashes;
     private ExecutorService executor;
 
-    public JaacardIndex(final List<Document> documents, final Shinglizer shinglizer, final int numHashes) {
-        if (documents.size() < 2) {
-            throw new IllegalArgumentException("You must provide at least 2 documents to compare.");
-        }
-        this.documents = Collections.unmodifiableList(documents);
+    public JaacardIndex(final Shinglizer shinglizer, final int numHashes) {
         this.numHashes = numHashes;
-        this.executor = Executors.newFixedThreadPool(10);
+        this.executor = Executors.newCachedThreadPool();
         this.shinglizer = shinglizer;
     }
 
@@ -52,7 +46,6 @@ public class JaacardIndex implements SimilarityIndex {
         try {
             return future.get();
         } catch (InterruptedException | ExecutionException e) {
-            e.printStackTrace();
             return null;
         }
     }
@@ -65,7 +58,7 @@ public class JaacardIndex implements SimilarityIndex {
         return (MinHashResult) getResultFromFuture(future);
     }
 
-    private List<ShinglizeResult> shinglize() {
+    private List<ShinglizeResult> shinglize(final List<Document> documents) {
         final List<Future<ShinglizeResult>> futures = documents.stream()
                 .map(doc -> executor.submit(() -> shinglizer.shinglize(doc)))
                 .collect(toList());
@@ -89,16 +82,15 @@ public class JaacardIndex implements SimilarityIndex {
         }
 
         final Map<Document, Set<Integer>> minHashResults = new HashMap<>();
-        for (Document doc : documents) {
-            minHashResults.put(doc, new HashSet<>());
+        for (ShinglizeResult result : shinglizeResults) {
+            minHashResults.put(result.getDocument(), new HashSet<>());
         }
 
-        minHashFutures.stream()
-                .map(this::getMinHashResult)
-                .forEach(result -> {
-                    Set<Integer> results = minHashResults.get(result.getDocument());
-                    results.add(result.getResult());
-                });
+        for (Future<MinHashResult> future : minHashFutures) {
+            MinHashResult result = getMinHashResult(future);
+            Set<Integer> results = minHashResults.get(result.getDocument());
+            results.add(result.getResult());
+        }
 
         return minHashResults;
     }
@@ -117,9 +109,9 @@ public class JaacardIndex implements SimilarityIndex {
     }
 
     @Override
-    public double computeIndex() {
-        executor = Executors.newFixedThreadPool(10);
-        final List<ShinglizeResult> shingleResults = shinglize();
+    public double computeIndex(final List<Document> documents) {
+        executor = Executors.newCachedThreadPool();
+        final List<ShinglizeResult> shingleResults = shinglize(documents);
         final Map<Document, Set<Integer>> minHashResults = calculateMinHashResults(shingleResults);
         final Set<Integer> finalResults = computeSetIntersections(new ArrayList<>(minHashResults.values()));
         executor.shutdown();
