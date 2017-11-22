@@ -12,7 +12,7 @@ public class MinHashResult {
         this.document = document;
     }
 
-    public int getResult() {
+    public int get() {
         return result;
     }
 

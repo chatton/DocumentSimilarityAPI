@@ -18,7 +18,7 @@ public class ShinglizeResult {
         return document;
     }
 
-    public List<Shingle> getResult() {
+    public List<Shingle> get() {
         return result;
     }
 }

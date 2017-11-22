@@ -76,20 +76,18 @@ public class JaacardIndex implements SimilarityIndex {
         for (ShinglizeResult shinglizeResult : shinglizeResults) {
             for (Integer hash : hashes) {
                 minHashFutures.add(executor.submit(() -> new MinHash(
-                        hash, shinglizeResult.getResult(), shinglizeResult.getDocument()).calculate())
+                        hash, shinglizeResult.get(), shinglizeResult.getDocument()).calculate())
                 );
             }
         }
 
         final Map<Document, Set<Integer>> minHashResults = new HashMap<>();
-        for (ShinglizeResult result : shinglizeResults) {
-            minHashResults.put(result.getDocument(), new HashSet<>());
-        }
 
         for (Future<MinHashResult> future : minHashFutures) {
             MinHashResult result = getMinHashResult(future);
-            Set<Integer> results = minHashResults.get(result.getDocument());
-            results.add(result.getResult());
+            minHashResults.computeIfAbsent(result.getDocument(), k -> new HashSet<>());
+            Set<Integer> currentResults = minHashResults.get(result.getDocument());
+            currentResults.add(result.get());
         }
 
         return minHashResults;
@@ -115,6 +113,7 @@ public class JaacardIndex implements SimilarityIndex {
         final Map<Document, Set<Integer>> minHashResults = calculateMinHashResults(shingleResults);
         final Set<Integer> finalResults = computeSetIntersections(new ArrayList<>(minHashResults.values()));
         executor.shutdown();
-        return (double) finalResults.size() / numHashes;
+        double size = (double) finalResults.size();
+        return  size / ((numHashes + numHashes) - size);
     }
 }
