@@ -10,7 +10,6 @@ import ie.gmit.sw.similarity.minhash.MinHashResult;
 import ie.gmit.sw.similarity.shingles.ShinglizeResult;
 import ie.gmit.sw.similarity.shingles.Shinglizer;
 
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -70,16 +69,12 @@ public class JaacardIndex implements SimilarityIndex {
 
     private Map<Document, Set<Integer>> calculateMinHashResults(final List<ShinglizeResult> shinglizeResults) {
 
-        final List<Future<MinHashResult>> minHashFutures = new ArrayList<>();
         final Set<Integer> hashes = generateHashes();
-
-        for (ShinglizeResult shinglizeResult : shinglizeResults) {
-            for (Integer hash : hashes) {
-                minHashFutures.add(executor.submit(() -> new MinHash(
-                        hash, shinglizeResult.get(), shinglizeResult.getDocument()).calculate())
-                );
-            }
-        }
+        final List<Future<MinHashResult>> minHashFutures = shinglizeResults.stream()
+                .flatMap(shingleResult -> hashes.stream()
+                        .map(hash -> executor.submit(() -> new MinHash(
+                                hash, shingleResult.get(), shingleResult.getDocument()).calculate()))
+                ).collect(ImmutableList.toImmutableList());
 
         final Map<Document, Set<Integer>> minHashResults = new HashMap<>();
 
@@ -113,6 +108,6 @@ public class JaacardIndex implements SimilarityIndex {
         final Set<Integer> finalResults = computeSetIntersections(ImmutableList.copyOf(minHashResults.values()));
         executor.shutdown();
         double size = (double) finalResults.size();
-        return  size / ((numHashes * shingleResults.size()) - size);
+        return size / ((numHashes * shingleResults.size()) - size);
     }
 }
