@@ -1,13 +1,15 @@
 package ie.gmit.sw.similarity.shingles;
 
 
+import java.util.List;
+
 public class Shingle {
 
     private final String text;
     private final int hashCode;
 
-    public Shingle(final String text) {
-        this.text = text;
+    public Shingle(final List<String> words) {
+        this.text = String.join(" ", words);
         this.hashCode = text.hashCode();
     }
 

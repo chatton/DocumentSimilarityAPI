@@ -21,4 +21,5 @@ public class URLDocument implements Document {
     public String text() {
         return text;
     }
+
 }

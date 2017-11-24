@@ -1,9 +1,11 @@
 package ie.gmit.sw.similarity.shingles;
 
+import com.google.common.collect.Iterables;
+import com.google.common.collect.Streams;
 import ie.gmit.sw.documents.Document;
 
-import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 public class WordShinglizer implements Shinglizer {
 
@@ -20,27 +22,15 @@ public class WordShinglizer implements Shinglizer {
     }
 
     @Override
-    public ShinglizeResult shinglize(Document document) {
+    public ShinglizeResult shinglize(final Document document) {
+        final List<String> words = document.words().stream()
+                .map(String::toLowerCase)
+                .collect(Collectors.toList());
 
-        final String text = document.text().toLowerCase();
-        final String[] words = text.split(pattern);
-
-        int pos = 0;
-        final StringBuilder sb = new StringBuilder();
-        final List<Shingle> shingles = new ArrayList<>();
-        while (pos < words.length) {
-            for (int i = 0; i < numWords; i++) {
-                if (pos == words.length) {
-                    break;
-                }
-                sb.append(words[pos]).append(" ");
-                pos++;
-            }
-
-            final Shingle shingle = new Shingle(sb.toString());
-            shingles.add(shingle);
-            sb.setLength(0); // clear the string builder.
-        }
+        final List<Shingle> shingles = Streams.stream(
+                Iterables.partition(words, numWords))
+                .map(Shingle::new)
+                .collect(Collectors.toList());
 
         return new ShinglizeResult(document, shingles);
     }

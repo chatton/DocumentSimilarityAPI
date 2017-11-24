@@ -85,7 +85,7 @@ public class JaacardIndex implements SimilarityIndex {
 
         for (Future<MinHashResult> future : minHashFutures) {
             MinHashResult result = getMinHashResult(future);
-            minHashResults.computeIfAbsent(result.getDocument(), k -> new HashSet<>());
+            minHashResults.putIfAbsent(result.getDocument(), new HashSet<>());
             Set<Integer> currentResults = minHashResults.get(result.getDocument());
             currentResults.add(result.get());
         }
@@ -114,6 +114,6 @@ public class JaacardIndex implements SimilarityIndex {
         final Set<Integer> finalResults = computeSetIntersections(new ArrayList<>(minHashResults.values()));
         executor.shutdown();
         double size = (double) finalResults.size();
-        return  size / ((numHashes + numHashes) - size);
+        return  size / ((numHashes * shingleResults.size()) - size);
     }
 }
