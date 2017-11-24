@@ -1,6 +1,7 @@
 package ie.gmit.sw.documents;
 
-import java.util.Arrays;
+import com.google.common.collect.ImmutableList;
+
 import java.util.List;
 
 public interface Document {
@@ -8,6 +9,7 @@ public interface Document {
     String text();
 
     default List<String> words() {
-        return Arrays.asList(text().split("[ -.,;:\\-]+"));
+        final String[] words = text().split("[ -.,;:\\-]+");
+        return ImmutableList.copyOf(words);
     }
 }

@@ -2,7 +2,6 @@ package ie.gmit.sw.similarity.shingles;
 
 import ie.gmit.sw.documents.Document;
 
-import java.util.Collections;
 import java.util.List;
 
 public class ShinglizeResult {
@@ -11,7 +10,7 @@ public class ShinglizeResult {
 
     public ShinglizeResult(final Document document, final List<Shingle> result) {
         this.document = document;
-        this.result = Collections.unmodifiableList(result);
+        this.result = result;
     }
 
     public Document getDocument() {

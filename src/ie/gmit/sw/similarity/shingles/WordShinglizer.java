@@ -5,7 +5,8 @@ import com.google.common.collect.Streams;
 import ie.gmit.sw.documents.Document;
 
 import java.util.List;
-import java.util.stream.Collectors;
+
+import static com.google.common.collect.ImmutableList.toImmutableList;
 
 public class WordShinglizer implements Shinglizer {
 
@@ -25,12 +26,12 @@ public class WordShinglizer implements Shinglizer {
     public ShinglizeResult shinglize(final Document document) {
         final List<String> words = document.words().stream()
                 .map(String::toLowerCase)
-                .collect(Collectors.toList());
+                .collect(toImmutableList());
 
         final List<Shingle> shingles = Streams.stream(
                 Iterables.partition(words, numWords))
                 .map(Shingle::new)
-                .collect(Collectors.toList());
+                .collect(toImmutableList());
 
         return new ShinglizeResult(document, shingles);
     }

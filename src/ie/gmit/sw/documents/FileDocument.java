@@ -17,7 +17,7 @@ public class FileDocument implements Document {
 
     private String getTextFromFile(String path) throws IOException {
         try (Stream<String> stream = Files.lines(Paths.get(path))) {
-            return stream.collect(Collectors.joining(" "));
+            return stream.collect(Collectors.joining(System.lineSeparator()));
         }
     }
 

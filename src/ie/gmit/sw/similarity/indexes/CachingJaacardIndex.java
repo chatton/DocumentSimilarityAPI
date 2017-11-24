@@ -1,14 +1,13 @@
 package ie.gmit.sw.similarity.indexes;
 
+import com.google.common.collect.ImmutableList;
 import ie.gmit.sw.documents.Document;
 import ie.gmit.sw.similarity.shingles.Shinglizer;
 
-import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 public class CachingJaacardIndex implements SimilarityIndex {
 
@@ -22,16 +21,16 @@ public class CachingJaacardIndex implements SimilarityIndex {
 
     @Override
     public double computeIndex(final List<Document> documents) {
-        List<Document> sortedDocuments = documents.stream()
+        final List<Document> sortedDocuments = documents.stream()
                 .sorted(Comparator.comparingInt(Document::hashCode))
-                .collect(Collectors.toList());
+                .collect(ImmutableList.toImmutableList());
 
         if (cache.containsKey(sortedDocuments)) {
             return cache.get(sortedDocuments);
         }
 
-        double result = index.computeIndex(documents);
-        cache.put(Collections.unmodifiableList(sortedDocuments), result);
+        final double result = index.computeIndex(documents);
+        cache.put(sortedDocuments, result);
         return result;
     }
 }
