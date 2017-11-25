@@ -9,6 +9,7 @@ import ie.gmit.sw.similarity.minhash.MinHash;
 import ie.gmit.sw.similarity.minhash.MinHashResult;
 import ie.gmit.sw.similarity.shingles.ShinglizeResult;
 import ie.gmit.sw.similarity.shingles.Shinglizer;
+import ie.gmit.sw.util.Pair;
 
 import java.util.HashMap;
 import java.util.HashSet;
@@ -70,11 +71,11 @@ public class JaacardIndex implements SimilarityIndex {
     private Map<Document, Set<Integer>> calculateMinHashResults(final List<ShinglizeResult> shinglizeResults) {
 
         final Set<Integer> hashes = generateHashes();
+
         final List<Future<MinHashResult>> minHashFutures = shinglizeResults.stream()
-                .flatMap(shingleResult -> hashes.stream()
-                        .map(hash -> executor.submit(() -> new MinHash(
-                                hash, shingleResult.get(), shingleResult.getDocument()).calculate()))
-                ).collect(ImmutableList.toImmutableList());
+                .flatMap(s -> hashes.stream().map(h -> new Pair<>(s, h)))
+                .map(p -> executor.submit(() -> new MinHash(p.second(), p.first().get(), p.first().getDocument()).calculate()))
+                .collect(ImmutableList.toImmutableList());
 
         final Map<Document, Set<Integer>> minHashResults = new HashMap<>();
 
