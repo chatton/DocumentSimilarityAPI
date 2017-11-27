@@ -4,6 +4,7 @@ import com.google.common.collect.Iterables;
 import com.google.common.collect.Streams;
 import ie.gmit.sw.documents.Document;
 
+import java.util.Arrays;
 import java.util.List;
 
 import static com.google.common.collect.ImmutableList.toImmutableList;
@@ -24,12 +25,13 @@ public class WordShinglizer implements Shinglizer {
 
     @Override
     public ShinglizeResult shinglize(final Document document) {
-        final List<String> words = document.words().stream()
+        String[] words = document.text().split(pattern);
+        final List<String> wordList = Arrays.stream(words)
                 .map(String::toLowerCase)
                 .collect(toImmutableList());
 
         final List<Shingle> shingles = Streams.stream(
-                Iterables.partition(words, numWords))
+                Iterables.partition(wordList, numWords))
                 .map(Shingle::new)
                 .collect(toImmutableList());
 

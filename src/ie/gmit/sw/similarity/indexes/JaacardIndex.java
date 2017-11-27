@@ -11,7 +11,6 @@ import ie.gmit.sw.similarity.shingles.ShinglizeResult;
 import ie.gmit.sw.similarity.shingles.Shinglizer;
 import ie.gmit.sw.util.Pair;
 
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -21,6 +20,7 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
+import java.util.stream.Collectors;
 
 public class JaacardIndex implements SimilarityIndex {
 
@@ -68,24 +68,35 @@ public class JaacardIndex implements SimilarityIndex {
                 .collect(ImmutableList.toImmutableList());
     }
 
-    private Map<Document, Set<Integer>> calculateMinHashResults(final List<ShinglizeResult> shinglizeResults) {
+    private Set<Integer> merge(final Set<Integer> set1, final Set<Integer> set2) {
+        return ImmutableSet.<Integer>builder()
+                .addAll(set1).addAll(set2)
+                .build();
+    }
 
-        final Set<Integer> hashes = generateHashes();
-
-        final List<Future<MinHashResult>> minHashFutures = shinglizeResults.stream()
+    private List<Future<MinHashResult>> getMinHashFutures(final List<ShinglizeResult> shinglizeResults, final Set<Integer> hashes) {
+        return shinglizeResults.stream()
                 .flatMap(s -> hashes.stream().map(h -> new Pair<>(s, h)))
                 .map(p -> executor.submit(() -> new MinHash(p.second(), p.first().get(), p.first().getDocument()).calculate()))
                 .collect(ImmutableList.toImmutableList());
+    }
 
-        final Map<Document, Set<Integer>> minHashResults = new HashMap<>();
+    private Map<Document, Set<Integer>> buildMinHashFutureResults(final List<Future<MinHashResult>> futures) {
+        final Map<Document, Set<Integer>> map = futures.stream()
+                .map(this::getMinHashResult)
+                .collect(Collectors.toMap(
+                        MinHashResult::getDocument, // key mapper - key will be the document itself.
+                        result -> ImmutableSet.of(result.get()), // value mapper - set of single minhash result value
+                        this::merge // on a collision of keys, merge the values into a single set.
+                ));
 
-        for (Future<MinHashResult> future : minHashFutures) {
-            MinHashResult result = getMinHashResult(future);
-            minHashResults.putIfAbsent(result.getDocument(), new HashSet<>());
-            minHashResults.get(result.getDocument()).add(result.get());
-        }
+        return ImmutableMap.copyOf(map);
+    }
 
-        return ImmutableMap.copyOf(minHashResults);
+    private Map<Document, Set<Integer>> calculateMinHashResults(final List<ShinglizeResult> shinglizeResults) {
+        final Set<Integer> hashes = generateHashes();
+        final List<Future<MinHashResult>> minHashFutures = getMinHashFutures(shinglizeResults, hashes);
+        return buildMinHashFutureResults(minHashFutures);
     }
 
     private Set<Integer> computeSetIntersections(final List<Set<Integer>> sets) {
@@ -103,12 +114,17 @@ public class JaacardIndex implements SimilarityIndex {
 
     @Override
     public double computeIndex(final List<Document> documents) {
+        if (documents.size() < 2) {
+            throw new IllegalArgumentException("Must provide at least 2 documents to compare.");
+        }
+
         executor = Executors.newCachedThreadPool();
         final List<ShinglizeResult> shingleResults = shinglize(documents);
         final Map<Document, Set<Integer>> minHashResults = calculateMinHashResults(shingleResults);
         final Set<Integer> finalResults = computeSetIntersections(ImmutableList.copyOf(minHashResults.values()));
         executor.shutdown();
+
         double size = (double) finalResults.size();
-        return size / ((numHashes * shingleResults.size()) - size);
+        return size / ((numHashes * documents.size()) - size);
     }
 }
