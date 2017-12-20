@@ -23,6 +23,6 @@ public class MinHash  {
                 .min()
                 .orElse(Integer.MAX_VALUE);
 
-        return new MinHashResult(minHash, document);
+        return new MinHashResult(document, minHash);
     }
 }

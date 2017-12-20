@@ -2,21 +2,10 @@ package ie.gmit.sw.similarity.minhash;
 
 
 import ie.gmit.sw.documents.Document;
+import ie.gmit.sw.similarity.results.FutureResult;
 
-public class MinHashResult {
-    private final int result;
-    private final Document document;
-
-    public MinHashResult(final int result, final Document document) {
-        this.result = result;
-        this.document = document;
-    }
-
-    public int get() {
-        return result;
-    }
-
-    public Document getDocument() {
-        return document;
+public class MinHashResult extends FutureResult<Integer> {
+    public MinHashResult(final Document document, final int result) {
+        super(document, result);
     }
 }

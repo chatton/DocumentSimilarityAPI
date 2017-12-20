@@ -25,7 +25,7 @@ public class WordShinglizer implements Shinglizer {
 
     @Override
     public ShinglizeResult shinglize(final Document document) {
-        String[] words = document.text().split(pattern);
+        final String[] words = document.text().split(pattern);
         final List<String> wordList = Arrays.stream(words)
                 .map(String::toLowerCase)
                 .collect(toImmutableList());
