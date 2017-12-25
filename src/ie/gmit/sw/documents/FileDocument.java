@@ -6,10 +6,19 @@ import java.nio.file.Paths;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+/**
+ * The type File document.
+ */
 public class FileDocument implements Document {
     private final String text;
     private final int id;
 
+    /**
+     * Instantiates a new File document.
+     *
+     * @param filePath the path to the specified file.
+     * @throws IOException throws an IOException if the file is not found.
+     */
     public FileDocument(final String filePath) throws IOException {
         text = getTextFromFile(filePath);
         id = text.hashCode();

@@ -1,6 +1,5 @@
 package ie.gmit.sw.documents;
 
-import com.google.common.collect.ImmutableList;
 import org.jsoup.Jsoup;
 import org.jsoup.select.Elements;
 
@@ -9,10 +8,20 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
+/**
+ * The type Url document.
+ */
 public class URLDocument implements Document {
 
     private final String text;
 
+    /**
+     * Instantiates a new Url document.
+     *
+     * @param url  the base url which will be used to construct the document.
+     * @param tags the html tags which are to be included in the document.
+     * @throws IOException if there is an error connecting to the provided url
+     */
     public URLDocument(final String url, final List<String> tags) throws IOException {
         final org.jsoup.nodes.Document doc = Jsoup.connect(url).get();
         text = tags.stream()
@@ -26,37 +35,72 @@ public class URLDocument implements Document {
         return text;
     }
 
+    /**
+     * The type Builder.
+     */
     public static class Builder {
 
         private final List<String> tags;
         private String url;
 
+        /**
+         * Instantiates a new UrlDocument Builder.
+         */
         public Builder() {
             this(null);
         }
 
+        /**
+         * Instantiates a new Builder.
+         *
+         * @param url the url for the UrlDocument
+         */
         public Builder(final String url) {
             this.url = url;
             this.tags = new ArrayList<>();
         }
 
+        /**
+         * Url builder.
+         *
+         * @param url the url
+         * @return the builder
+         */
         public Builder url(final String url) {
             this.url = url;
             return this;
         }
 
-        public Builder addTags(final String... tags) {
+        /**
+         * Tags builder.
+         *
+         * @param tags the tags
+         * @return the builder
+         */
+        public Builder tags(final String... tags) {
             for (String tag : tags) {
                 addTag(tag);
             }
             return this;
         }
 
+        /**
+         * Add tag builder.
+         *
+         * @param tag the tag
+         * @return the builder
+         */
         public Builder addTag(final String tag) {
             tags.add(tag);
             return this;
         }
 
+        /**
+         * Build url document.
+         *
+         * @return the url document
+         * @throws IOException if there is an error creating the UrlDocument
+         */
         public URLDocument build() throws IOException {
             if (url == null || tags.isEmpty()) {
                 throw new IllegalStateException(
