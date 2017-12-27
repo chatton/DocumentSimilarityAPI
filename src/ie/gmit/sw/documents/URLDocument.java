@@ -41,6 +41,7 @@ public class URLDocument implements Document {
      */
     public static class Builder {
 
+        private final static String HTTPS_PROTOCOL = "https";
         private final List<String> tags;
         private String url;
 
@@ -59,9 +60,8 @@ public class URLDocument implements Document {
          * @return the builder
          */
         public Builder url(final String url) {
-            final String httpProtocol = "https";
-            if (!url.startsWith(httpProtocol)) {
-                this.url = httpProtocol + "://" + url;
+            if (!url.startsWith(HTTPS_PROTOCOL)) {
+                this.url = HTTPS_PROTOCOL + "://" + url;
             } else {
                 this.url = url;
             }

@@ -8,9 +8,8 @@ public class Runner {
      * The entry point of application.
      *
      * @param args the input arguments
-     * @throws Exception the exception
      */
-    public static void main(String[] args) throws Exception {
+    public static void main(String[] args) {
         final Scanner sc = new Scanner(System.in);
         final UI ui = new UI(sc);
         ui.start();

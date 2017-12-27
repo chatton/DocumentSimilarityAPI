@@ -29,7 +29,7 @@ package "Indexes" #DDFFDD {
 
 package "Shinglizer" #DDDDFF {
 
-    JaacardIndex *-- Shinglizer
+    JaacardIndex o-- Shinglizer
 
     interface Shinglizer
 

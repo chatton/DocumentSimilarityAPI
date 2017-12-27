@@ -7,7 +7,7 @@ import ie.gmit.sw.documents.Document;
  *
  * @param <T> the type parameter
  */
-public class FutureResult<T> {
+public abstract class FutureResult<T> {
 
     private final Document document;
     private final T result;

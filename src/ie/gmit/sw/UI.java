@@ -22,7 +22,9 @@ import java.util.Set;
  */
 class UI {
 
-    private final static Set<String> VALID_CACHING_OPTIONS = ImmutableSet.of("yes", "y", "no", "n");
+    private final static Set<String> VALID_CACHING_OPTIONS = ImmutableSet.of(
+            "yes", "y", "no", "n"
+    );
     private final static int MIN_NUMBER_DOCUMENTS = 2;
 
     private final Scanner scanner;
@@ -36,7 +38,7 @@ class UI {
      *
      * @param scanner the scanner
      */
-    UI(Scanner scanner) {
+    UI(final Scanner scanner) {
         this.scanner = scanner;
         running = true;
     }
@@ -50,10 +52,18 @@ class UI {
         return promptForInt("");
     }
 
-    private int promptForInt(String prompt) {
-        System.out.print(prompt);
-        final int choice = scanner.nextInt();
-        scanner.nextLine(); // swallow new line character.
+    private int promptForInt(final String prompt) {
+        int choice;
+        do {
+            System.out.print(prompt);
+            final String integer = scanner.nextLine();
+            try {
+                choice = Integer.parseInt(integer);
+            } catch (NumberFormatException e) {
+                System.out.println("Bad input - enter again.");
+                choice = -1;
+            }
+        } while (choice == -1);
         return choice;
     }
 
@@ -65,10 +75,10 @@ class UI {
     }
 
     private void configureJaacardIndex() {
-        boolean wantsToCache = wantsToCache();
         final Shinglizer shinglizer = createShinglizer();
         final int numMinHashes = promptForInt("Enter number of min hashes: ");
         final SimilarityIndex jaacardIndex = new JaacardIndex(shinglizer, numMinHashes);
+        final boolean wantsToCache = wantsToCache();
         if (wantsToCache) {
             index = new CachingSimilarityIndex(jaacardIndex);
         } else {
@@ -80,7 +90,7 @@ class UI {
     private boolean wantsToCache() {
         String choice;
         do {
-            choice = promptForString("Do you want to cache results? (Y)es / (N)o");
+            choice = promptForString("Do you want to cache results? (Y)es / (N)o: ");
         } while (!validChoice(choice));
         return choice.toLowerCase().startsWith("y");
     }
@@ -179,9 +189,7 @@ class UI {
         return VALID_CACHING_OPTIONS.contains(choice.toLowerCase());
     }
 
-    /**
-     * Start.
-     */
+
     void start() {
         do {
             displayMenu();
