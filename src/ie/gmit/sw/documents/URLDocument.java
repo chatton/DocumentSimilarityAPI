@@ -5,6 +5,7 @@ import org.jsoup.select.Elements;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -47,18 +48,9 @@ public class URLDocument implements Document {
          * Instantiates a new UrlDocument Builder.
          */
         public Builder() {
-            this(null);
+            tags = new ArrayList<>();
         }
 
-        /**
-         * Instantiates a new Builder.
-         *
-         * @param url the url for the UrlDocument
-         */
-        public Builder(final String url) {
-            this.url = url;
-            this.tags = new ArrayList<>();
-        }
 
         /**
          * Url builder.
@@ -67,7 +59,12 @@ public class URLDocument implements Document {
          * @return the builder
          */
         public Builder url(final String url) {
-            this.url = url;
+            final String httpProtocol = "https";
+            if (!url.startsWith(httpProtocol)) {
+                this.url = httpProtocol + "://" + url;
+            } else {
+                this.url = url;
+            }
             return this;
         }
 
@@ -78,9 +75,7 @@ public class URLDocument implements Document {
          * @return the builder
          */
         public Builder tags(final String... tags) {
-            for (String tag : tags) {
-                addTag(tag);
-            }
+            Arrays.stream(tags).forEach(this::addTag);
             return this;
         }
 

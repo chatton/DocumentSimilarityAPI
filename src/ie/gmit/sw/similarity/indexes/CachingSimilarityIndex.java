@@ -2,7 +2,6 @@ package ie.gmit.sw.similarity.indexes;
 
 import com.google.common.collect.ImmutableList;
 import ie.gmit.sw.documents.Document;
-import ie.gmit.sw.similarity.shingles.Shinglizer;
 
 import java.util.Comparator;
 import java.util.HashMap;
@@ -11,23 +10,17 @@ import java.util.Map;
 
 /**
  * The type Caching jaacard index.
- * CachingJaacardIndex caches any computed values and will
+ * CachingSimilarityIndex caches any computed values and will
  * return the same values if the same documents are provided as
  * input parameters for the computeIndex method.
  */
-public class CachingJaacardIndex implements SimilarityIndex {
+public class CachingSimilarityIndex implements SimilarityIndex {
 
-    private final JaacardIndex index;
+    private final SimilarityIndex index;
     private final Map<List<Document>, Double> cache;
 
-    /**
-     * Instantiates a new Caching jaacard index.
-     *
-     * @param shinglizer the shinglizer which is used to convert the documents into shingles.
-     * @param numHashes  the number of min hashes that will be used in the algorithm.
-     */
-    public CachingJaacardIndex(final Shinglizer shinglizer, final int numHashes) {
-        index = new JaacardIndex(shinglizer, numHashes);
+    public CachingSimilarityIndex(final SimilarityIndex index) {
+        this.index = index;
         cache = new HashMap<>();
     }
 

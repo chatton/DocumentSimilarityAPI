@@ -133,15 +133,12 @@ public class JaacardIndex implements SimilarityIndex {
                 .map(this::getMinHashResult) // blocking call to future#get
                 .collect(Collectors.toMap(
                         MinHashResult::getDocument, // key mapper - key will be the document itself.
-                        result -> ImmutableSet.of(result.get()), // value mapper - set of single minhash result value
-                        this::retainAll // on a collision of keys, retainAll the values into a single set.
+                        result -> ImmutableSet.of(result.get()),  // value mapper - set of single minhash result value
+                        // on a collision of keys, merge the values into a single set.
+                        (s1, s2) -> CollectionUtils.merge(Arrays.asList(s1, s2))
                 ));
 
         return ImmutableMap.copyOf(map);
-    }
-
-    private <T> Collection retainAll(Collection<T> col1, Collection<T> col2) {
-        return CollectionUtils.retainAll(Arrays.asList(col1, col2));
     }
 
     /**

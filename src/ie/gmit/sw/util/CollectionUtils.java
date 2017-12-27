@@ -46,4 +46,10 @@ public class CollectionUtils {
         }
         return ImmutableSet.copyOf(set);
     }
+
+    public static <T> Collection<T> merge(final Collection<Collection<T>> cols){
+        final Collection<T> col = new HashSet<>();
+        cols.forEach(col::addAll);
+        return ImmutableSet.copyOf(col);
+    }
 }

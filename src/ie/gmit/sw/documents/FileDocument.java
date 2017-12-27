@@ -24,8 +24,8 @@ public class FileDocument implements Document {
         id = text.hashCode();
     }
 
-    private String getTextFromFile(String path) throws IOException {
-        try (Stream<String> stream = Files.lines(Paths.get(path))) {
+    private String getTextFromFile(final String path) throws IOException {
+        try (final Stream<String> stream = Files.lines(Paths.get(path))) {
             return stream.collect(Collectors.joining(System.lineSeparator()));
         }
     }

@@ -1,0 +1,46 @@
+@startuml
+left to right direction
+
+package "Documents" #FFDDDD {
+
+    interface Document
+
+    class FileDocument
+    class URLDocument
+    class StringDocument
+
+    Document <|.. FileDocument
+    Document <|.. URLDocument
+    Document <|.. StringDocument
+
+}
+
+package "Indexes" #DDFFDD {
+    interface SimilarityIndex
+
+    SimilarityIndex o-- Document
+
+    class JaacardIndex
+    class CachingSimilarityIndex
+
+    SimilarityIndex <|.. JaacardIndex
+    SimilarityIndex <|.. CachingSimilarityIndex
+}
+
+package "Shinglizer" #DDDDFF {
+
+    JaacardIndex *-- Shinglizer
+
+    interface Shinglizer
+
+    class WordShinglizer
+    Shinglizer <|.. WordShinglizer
+}
+
+package "MinHash" #FFDDFF {
+    class MinHash
+    JaacardIndex *-- MinHash
+}
+
+hide members
+@enduml

@@ -11,7 +11,8 @@ public class Runner {
      * @throws Exception the exception
      */
     public static void main(String[] args) throws Exception {
-        final UI ui = new UI(new Scanner(System.in));
+        final Scanner sc = new Scanner(System.in);
+        final UI ui = new UI(sc);
         ui.start();
     }
 }
