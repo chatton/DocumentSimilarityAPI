@@ -10,20 +10,21 @@ import ie.gmit.sw.similarity.minhash.MinHashResult;
 import ie.gmit.sw.similarity.results.FutureResult;
 import ie.gmit.sw.similarity.shingles.ShinglizeResult;
 import ie.gmit.sw.similarity.shingles.Shinglizer;
-import ie.gmit.sw.util.CollectionUtils;
 import ie.gmit.sw.util.Pair;
 
-import java.util.Arrays;
 import java.util.Collection;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Random;
 import java.util.Set;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
-import java.util.stream.Collectors;
+
 
 /**
  * The type Jaacard index.
@@ -37,7 +38,7 @@ public class JaacardIndex implements SimilarityIndex {
     private ExecutorService executor;
 
     /**
-     * Instantiates a new Jaacard index.
+     * Instantiates a new JaacardIndex.
      *
      * @param shinglizer the shinglizer which will be used to break documents into shingles.
      * @param numHashes  the number of hashes that will be used in the min hash algorithm.
@@ -48,11 +49,12 @@ public class JaacardIndex implements SimilarityIndex {
     }
 
     /**
-     * This method generates a set of numHashes random numbers.
+     * Generates a set of pseudo-random numbers.
      *
-     * @return a Set of integers to be used when calculating the min hashes.
+     * @param numHashes the number of hashes to be generated.
+     * @return a Set of pseudo-random boxed integers.
      */
-    private Set<Integer> generateHashes() {
+    private Set<Integer> generateHashes(final int numHashes) {
         return new Random().ints()
                 .limit(numHashes)
                 .boxed()
@@ -60,12 +62,18 @@ public class JaacardIndex implements SimilarityIndex {
     }
 
 
+    /**
+     * @param future the future to get the result from.
+     * @param <T>    a subclass of {@link FutureResult}
+     * @return the result of a call to future#get or null
+     */
     @SuppressWarnings("unchecked")
-    private <T extends FutureResult> T getResult(Future future) {
+    private <T extends FutureResult> T getResult(final Future future) {
         try {
             return (T) future.get();
         } catch (InterruptedException | ExecutionException e) {
-            return null; // TODO don't return null
+            System.out.println("There was an error calling Future#get. Error: " + e.getMessage());
+            return null;
         }
     }
 
@@ -78,11 +86,12 @@ public class JaacardIndex implements SimilarityIndex {
     }
 
     /**
-     * This method takes a list of documents and breaks up each document
-     * into a list of shingles and creates a ShinglizeResult. One document per thread.
+     * Takes a List of documents and breaks up each document into
+     * a List of shingles in a separate thread. Each is converted into
+     * a {@link ShinglizeResult}
      *
      * @param documents the documents to be broken up into shingles.
-     * @return a List of ShinglizeResults
+     * @return a List of {@link ShinglizeResult}s
      */
     private List<ShinglizeResult> shinglize(final List<Document> documents) {
         final List<Future<ShinglizeResult>> futures = documents.stream()
@@ -91,18 +100,20 @@ public class JaacardIndex implements SimilarityIndex {
 
         return futures.stream()
                 .map(this::getShinglizeResult) // block here on future#get
+                .filter(Objects::nonNull)
                 .collect(ImmutableList.toImmutableList()); // return the final results as a list.
     }
 
     /**
-     * This method takes a list of ShinglizeResults and a Set of hashes and creates a list
-     * of MinHashResult futures which will be used to calculate the JaacardIndex.
+     * Takes a list of {@link ShinglizeResult}s and a Set of hashes and creates a list
+     * of {@link MinHashResult} futures which are used to calculate the JaacardIndex.
      *
-     * @param shinglizeResults the list of ShinglizeResults that are used to compute MinHashResults
+     * @param shinglizeResults the list of {@link ShinglizeResult}s that are used to compute {@link MinHashResult}s
      * @param hashes           the hashes used in the minhash algorithm.
      * @return a list of MinHashResult futures.
      */
-    private List<Future<MinHashResult>> getMinHashFutures(final List<ShinglizeResult> shinglizeResults, final Set<Integer> hashes) {
+    private List<Future<MinHashResult>> getMinHashFutures(final List<ShinglizeResult> shinglizeResults,
+                                                          final Set<Integer> hashes) {
         return shinglizeResults.stream()
                 .flatMap(shingleResult -> hashes.stream().map(hash -> new Pair<>(shingleResult, hash)))
                 .map(pair -> executor.submit(() -> makeMinHash(pair).calculate()))
@@ -110,53 +121,78 @@ public class JaacardIndex implements SimilarityIndex {
     }
 
     /**
-     * This is a helper conversion method which takes a Pair of ShinglizeResult
-     * and Integer and creates a MinHash.
+     * Helper construction method which takes a Pair of {@link ShinglizeResult}
+     * and Integer and creates a {@link MinHash}.
      *
-     * @param pair
+     * @param pair of type {@link ShinglizeResult} and Integer
      * @return MinHash created from the pair.
      */
-    private MinHash makeMinHash(Pair<ShinglizeResult, Integer> pair) {
+    private MinHash makeMinHash(final Pair<ShinglizeResult, Integer> pair) {
         return new MinHash(pair.second(), pair.first().get(), pair.first().getDocument());
     }
 
     /**
-     * This method takes the list of MinHashResult futures and builds up a map of the results
-     * with the Document as a key and a collection of integers as the value. The collection of
-     * integers are the min hash results.
+     * This method takes the list of {@link MinHashResult} futures and builds up a map of the results
+     * with the {@link Document} as the key and a collection of integers as the value. The collection of
+     * integers are the min hash results for that {@link Document}.
      *
-     * @param futures the MinHashFutures created by {@link ie.gmit.sw.similarity.indexes.JaacardIndex#getMinHashFutures(List, Set)}
+     * @param futures the MinHashFutures created by {@link #getMinHashFutures(List, Set)}
      * @return A map of Document to Collection of integers. Where the integers are the min hash results for the corresponding document.
      */
     private Map<Document, Collection<Integer>> buildMinHashFutureResults(final List<Future<MinHashResult>> futures) {
-        final Map<Document, Collection<Integer>> map = futures.stream()
-                .map(this::getMinHashResult) // blocking call to future#get
-                .collect(Collectors.toMap(
-                        MinHashResult::getDocument, // key mapper - key will be the document itself.
-                        result -> ImmutableSet.of(result.get()),  // value mapper - set of single minhash result value
-                        // on a collision of keys, merge the values into a single set.
-                        (s1, s2) -> CollectionUtils.merge(Arrays.asList(s1, s2))
-                ));
+        final Map<Document, Collection<Integer>> minHashResults = new HashMap<>();
+        for (final Future<MinHashResult> future : futures) {
+            final MinHashResult result = getMinHashResult(future);
+            if (result == null) {
+                continue;
+            }
+            final Document doc = result.getDocument();
+            if (!minHashResults.containsKey(doc)) {
+                minHashResults.put(doc, new HashSet<>());
+            }
+            final Collection<Integer> col = minHashResults.get(doc);
+            col.add(result.get());
+        }
 
-        return ImmutableMap.copyOf(map);
+        return ImmutableMap.copyOf(minHashResults);
     }
 
     /**
      * This method takes the result of all the shinglized documents
      * and returns a map with the results of the min hash algorithm per document.
      *
-     * @param shinglizeResults the result of a call to {@link ie.gmit.sw.similarity.indexes.JaacardIndex#shinglize(List)}
+     * @param shinglizeResults the result of a call to {@link #shinglize(List)}
      * @return The map of document to collection of min hash results.
      */
     private Map<Document, Collection<Integer>> calculateMinHashResults(final List<ShinglizeResult> shinglizeResults) {
-        final Set<Integer> hashes = generateHashes();
+        final Set<Integer> hashes = generateHashes(numHashes);
         final List<Future<MinHashResult>> minHashFutures = getMinHashFutures(shinglizeResults, hashes);
         return buildMinHashFutureResults(minHashFutures);
     }
 
     /**
-     * @param documents the documents
-     * @return
+     * Takes a List of collections and returns a new collection
+     * which is the intersection of all provided collections.
+     *
+     * @param cols the List of collections.
+     * @param <T>  the type of the collections in the input list.
+     * @return the new collection which is the intersection of cols
+     */
+    private <T> Collection<T> intersection(final List<Collection<T>> cols) {
+        if (cols.isEmpty()) {
+            return ImmutableSet.of();
+        }
+        final Set<T> set = new HashSet<>(cols.get(0));
+        for (int i = 1; i < cols.size(); i++) {
+            set.retainAll(cols.get(i));
+        }
+        return ImmutableSet.copyOf(set);
+    }
+
+    /**
+     * @param documents the documents to compute the Jaacard index of.
+     * @return the Jaacard index of all the provided documents.
+     * @throws IllegalArgumentException if fewer than 2 documents are provided.
      */
     @Override
     public double computeIndex(final List<Document> documents) {
@@ -167,7 +203,7 @@ public class JaacardIndex implements SimilarityIndex {
         executor = Executors.newCachedThreadPool();
         final List<ShinglizeResult> shingleResults = shinglize(documents);
         final Map<Document, Collection<Integer>> minHashResults = calculateMinHashResults(shingleResults);
-        final Collection<Integer> finalResults = CollectionUtils.retainAll(ImmutableList.copyOf(minHashResults.values()));
+        final Collection<Integer> finalResults = intersection(ImmutableList.copyOf(minHashResults.values()));
         executor.shutdown();
 
         final double size = (double) finalResults.size();

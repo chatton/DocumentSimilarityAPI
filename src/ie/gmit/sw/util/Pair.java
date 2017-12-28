@@ -1,7 +1,7 @@
 package ie.gmit.sw.util;
 
 /**
- * The type Pair.
+ * The type Pair. A Grouping of 2 types together in a single object.
  *
  * @param <T1> the type parameter
  * @param <T2> the type parameter
@@ -13,8 +13,8 @@ public class Pair<T1, T2> {
     /**
      * Instantiates a new Pair.
      *
-     * @param t1 the t 1
-     * @param t2 the t 2
+     * @param t1 the first type.
+     * @param t2 the second type.
      */
     public Pair(final T1 t1, final T2 t2) {
         this.t1 = t1;
@@ -22,18 +22,18 @@ public class Pair<T1, T2> {
     }
 
     /**
-     * First t 1.
+     * First type.
      *
-     * @return the t 1
+     * @return the first type.
      */
     public T1 first() {
         return t1;
     }
 
     /**
-     * Second t 2.
+     * Second type.
      *
-     * @return the t 2
+     * @return the second type.
      */
     public T2 second() {
         return t2;

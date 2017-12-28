@@ -3,7 +3,8 @@ package ie.gmit.sw.similarity.results;
 import ie.gmit.sw.documents.Document;
 
 /**
- * The type Future result.
+ * The type Future result is an abstract base class.
+ * It holds onto a Document and a Generic result.
  *
  * @param <T> the type parameter
  */
@@ -24,7 +25,7 @@ public abstract class FutureResult<T> {
     }
 
     /**
-     * Gets document.
+     * Gets the document associated with the FutureResult.
      *
      * @return the document
      */
@@ -33,9 +34,9 @@ public abstract class FutureResult<T> {
     }
 
     /**
-     * Get t.
+     * Gets the result associated with the FutureResult.
      *
-     * @return the t
+     * @return the result
      */
     public T get() {
         return result;

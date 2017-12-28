@@ -17,14 +17,12 @@ import java.util.List;
 import java.util.Scanner;
 import java.util.Set;
 
-/**
- * The type Ui.
- */
 class UI {
 
     private final static Set<String> VALID_CACHING_OPTIONS = ImmutableSet.of(
             "yes", "y", "no", "n"
     );
+
     private final static int MIN_NUMBER_DOCUMENTS = 2;
 
     private final Scanner scanner;
@@ -33,11 +31,6 @@ class UI {
     private boolean isConfigured;
     private SimilarityIndex index;
 
-    /**
-     * Instantiates a new Ui.
-     *
-     * @param scanner the scanner
-     */
     UI(final Scanner scanner) {
         this.scanner = scanner;
         running = true;

@@ -4,15 +4,13 @@ import ie.gmit.sw.documents.Document;
 
 import java.util.List;
 
-/**
- * The interface Similarity index.
- */
 public interface SimilarityIndex {
     /**
-     * Compute index double.
+     * Computes a value between 0 and 1 indicating the similarity
+     * of the documents provided as input arguments.
      *
-     * @param documents the documents
-     * @return the double
+     * @param documents the {@link Document}s to be compared.
+     * @return similarity index between all the provided documents as a double between 0 and 1.
      */
-    double computeIndex(final List<Document> documents);
+    double computeIndex(List<Document> documents);
 }

@@ -10,11 +10,13 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 /**
- * The type Url document.
+ * The type URLDocument. A URLDocument is a {@link Document} implementation
+ * that is built using a URL and HTML tags.
  */
 public class URLDocument implements Document {
 
     private final String text;
+    private final int id;
 
     /**
      * Instantiates a new Url document.
@@ -29,6 +31,7 @@ public class URLDocument implements Document {
                 .map(doc::getElementsByTag)
                 .map(Elements::text)
                 .collect(Collectors.joining(System.lineSeparator()));
+        id = text.hashCode();
     }
 
     @Override
@@ -36,8 +39,21 @@ public class URLDocument implements Document {
         return text;
     }
 
+    @Override
+    public int hashCode() {
+        return id;
+    }
+
+    @Override
+    public boolean equals(Object other) {
+        if (other == null || !(other instanceof URLDocument)) {
+            return false;
+        }
+        return id == ((URLDocument) other).id;
+    }
+
     /**
-     * The type Builder.
+     * A Builder class to construct URLDocuments step by step.
      */
     public static class Builder {
 
@@ -56,8 +72,8 @@ public class URLDocument implements Document {
         /**
          * Url builder.
          *
-         * @param url the url
-         * @return the builder
+         * @param url the which will be used for the URLDocument
+         * @return the Builder instance for method chaining.
          */
         public Builder url(final String url) {
             if (!url.startsWith(HTTPS_PROTOCOL)) {
@@ -71,19 +87,18 @@ public class URLDocument implements Document {
         /**
          * Tags builder.
          *
-         * @param tags the tags
-         * @return the builder
+         * @param tags a variable number of Strings each should be a HTML tag.
+         * @return the Builder instance for method chaining.
          */
         public Builder tags(final String... tags) {
             Arrays.stream(tags).forEach(this::addTag);
             return this;
         }
 
+
         /**
-         * Add tag builder.
-         *
-         * @param tag the tag
-         * @return the builder
+         * @param tag the HTML tag as a String.
+         * @return the Builder instance for method chaining.
          */
         public Builder addTag(final String tag) {
             tags.add(tag);
@@ -93,7 +108,7 @@ public class URLDocument implements Document {
         /**
          * Build url document.
          *
-         * @return the url document
+         * @return the url document created using the values set in the Builder.
          * @throws IOException if there is an error creating the UrlDocument
          */
         public URLDocument build() throws IOException {

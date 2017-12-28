@@ -27,7 +27,7 @@ package "Indexes" #DDFFDD {
     SimilarityIndex <|.. CachingSimilarityIndex
 }
 
-package "Shinglizer" #DDDDFF {
+package "Shingles" #DDDDFF {
 
     JaacardIndex o-- Shinglizer
 

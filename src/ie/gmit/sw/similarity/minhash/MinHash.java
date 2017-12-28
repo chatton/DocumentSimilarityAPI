@@ -6,7 +6,8 @@ import ie.gmit.sw.similarity.shingles.Shingle;
 import java.util.List;
 
 /**
- * The type Min hash.
+ * The type Min hash. Used to calculate the min hash of a group
+ * of shingles.
  */
 public class MinHash  {
 

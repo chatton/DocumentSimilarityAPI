@@ -9,15 +9,14 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * The type Caching jaacard index.
  * CachingSimilarityIndex caches any computed values and will
  * return the same values if the same documents are provided as
- * input parameters for the computeIndex method.
+ * input parameters for the computeIndex method (irrespective of order).
  */
 public class CachingSimilarityIndex implements SimilarityIndex {
 
     private final SimilarityIndex index;
-    private final Map<List<Document>, Double> cache;
+    private final Map<List<Integer>, Double> cache;
 
     public CachingSimilarityIndex(final SimilarityIndex index) {
         this.index = index;
@@ -30,16 +29,22 @@ public class CachingSimilarityIndex implements SimilarityIndex {
      */
     @Override
     public double computeIndex(final List<Document> documents) {
-        final List<Document> sortedDocuments = documents.stream()
+        final List<Integer> documentHashCodes = documents.stream()
                 .sorted(Comparator.comparingInt(Document::hashCode))
+                .map(Document::hashCode)
                 .collect(ImmutableList.toImmutableList());
+        /*
+        by sorting the documents before checking it allows us to
+        take advantage of having cached results even if the documents
+        are not provided in the same order.
+         */
 
-        if (cache.containsKey(sortedDocuments)) {
-            return cache.get(sortedDocuments);
+        if (cache.containsKey(documentHashCodes)) {
+            return cache.get(documentHashCodes);
         }
 
         final double result = index.computeIndex(documents);
-        cache.put(sortedDocuments, result);
+        cache.put(documentHashCodes, result);
         return result;
     }
 }

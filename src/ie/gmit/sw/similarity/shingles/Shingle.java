@@ -3,7 +3,7 @@ package ie.gmit.sw.similarity.shingles;
 import java.util.Collection;
 
 /**
- * The type Shingle.
+ * The type Shingle. Represents a group of words.
  */
 public class Shingle {
 

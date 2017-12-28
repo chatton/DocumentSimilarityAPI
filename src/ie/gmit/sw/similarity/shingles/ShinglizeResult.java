@@ -6,7 +6,8 @@ import ie.gmit.sw.similarity.results.FutureResult;
 import java.util.List;
 
 /**
- * The type Shinglize result.
+ * The type ShinglizeResult. A Subclass of FutureResult
+ * that returns a List of {@link Shingle}s as the result type.
  */
 public class ShinglizeResult extends FutureResult<List<Shingle>> {
     /**

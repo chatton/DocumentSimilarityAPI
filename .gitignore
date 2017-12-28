@@ -2,3 +2,8 @@
 out/
 .idea/
 target/
+META-INF/
+TestRunner.java
+res/
+docs/
+temp.txt
