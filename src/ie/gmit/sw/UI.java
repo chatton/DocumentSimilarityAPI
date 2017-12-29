@@ -41,27 +41,22 @@ class UI {
         return scanner.nextLine();
     }
 
-    private int promptForInt() {
-        return promptForInt("");
-    }
-
     private int promptForInt(final String prompt) {
-        int choice;
-        do {
-            System.out.print(prompt);
-            final String integer = scanner.nextLine();
+
+        boolean finished = false;
+        int choice = -1;
+        while (!finished) {
             try {
-                choice = Integer.parseInt(integer);
+                choice = Integer.parseInt(promptForString(prompt));
+                finished = true;
             } catch (NumberFormatException e) {
                 System.out.println("Bad input - enter again.");
-                choice = -1;
             }
-        } while (choice == -1);
+        }
         return choice;
     }
 
     private void displayMenu() {
-        System.out.println("Enter option.");
         System.out.println("1) Compare document similarity.");
         System.out.println("2) Configure Jaacard Index.");
         System.out.println("3) Exit.");
@@ -142,7 +137,7 @@ class UI {
         final int numDocs = getNumberOfDocumentsToCreate();
         final List<Document> documents = createDocuments(numDocs);
         final double result = index.computeIndex(documents);
-        System.out.println("The documents have a Jaacard index of [" + result + "]");
+        System.out.println("The [" + documents.size() + "] documents have a Jaacard index of [" + result + "]");
     }
 
     private Document createFileDocument() {
@@ -174,7 +169,7 @@ class UI {
     }
 
     private Document createStringDocument() {
-        final String text = promptForString("Enter the document text. (all on one line)");
+        final String text = promptForString("Enter the document text. (all on one line): ");
         return new StringDocument(text);
     }
 
@@ -186,7 +181,7 @@ class UI {
     void start() {
         do {
             displayMenu();
-            switch (promptForInt()) {
+            switch (promptForInt("Enter option: ")) {
                 case 1:
                     if (isConfigured) {
                         compareDocuments();

@@ -15,8 +15,7 @@ import java.util.stream.Collectors;
  */
 public class URLDocument implements Document {
 
-    private final String text;
-    private final int id;
+    private final StringDocument stringDoc;
 
     /**
      * Instantiates a new Url document.
@@ -27,21 +26,22 @@ public class URLDocument implements Document {
      */
     public URLDocument(final String url, final List<String> tags) throws IOException {
         final org.jsoup.nodes.Document doc = Jsoup.connect(url).get();
-        text = tags.stream()
+        final String text = tags.stream()
                 .map(doc::getElementsByTag)
                 .map(Elements::text)
                 .collect(Collectors.joining(System.lineSeparator()));
-        id = text.hashCode();
+
+        stringDoc = new StringDocument(text);
     }
 
     @Override
     public String text() {
-        return text;
+        return stringDoc.text();
     }
 
     @Override
     public int hashCode() {
-        return id;
+        return stringDoc.hashCode();
     }
 
     @Override
@@ -49,7 +49,7 @@ public class URLDocument implements Document {
         if (other == null || !(other instanceof URLDocument)) {
             return false;
         }
-        return id == ((URLDocument) other).id;
+        return stringDoc.equals(((URLDocument) other).stringDoc);
     }
 
     /**

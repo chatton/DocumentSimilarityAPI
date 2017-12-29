@@ -7,13 +7,12 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 /**
- * The type FileDocument. A FileDocument is a {@link Document} subclass
+ * The type FileDocument. A FileDocument is a {@link Document} implementation
  * created from a file.
  */
 public class FileDocument implements Document {
 
-    private final String text;
-    private final int id;
+    private final StringDocument stringDoc;
 
     /**
      * Instantiates a new File document.
@@ -22,8 +21,7 @@ public class FileDocument implements Document {
      * @throws IOException throws an IOException if the file is not found.
      */
     public FileDocument(final String filePath) throws IOException {
-        text = getTextFromFile(filePath);
-        id = text.hashCode();
+        stringDoc = new StringDocument(getTextFromFile(filePath));
     }
 
     /**
@@ -39,12 +37,12 @@ public class FileDocument implements Document {
 
     @Override
     public int hashCode() {
-        return id;
+        return stringDoc.hashCode();
     }
 
     @Override
     public String text() {
-        return text;
+        return stringDoc.text();
     }
 
     @Override
@@ -52,6 +50,6 @@ public class FileDocument implements Document {
         if (other == null || !(other instanceof FileDocument)) {
             return false;
         }
-        return id == ((FileDocument) other).id;
+        return stringDoc.equals(((FileDocument) other).stringDoc);
     }
 }
