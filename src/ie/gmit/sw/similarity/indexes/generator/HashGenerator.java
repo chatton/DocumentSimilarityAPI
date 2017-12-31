@@ -2,7 +2,6 @@ package ie.gmit.sw.similarity.indexes.generator;
 
 import java.util.Collection;
 import java.util.Random;
-import java.util.Set;
 
 import static com.google.common.collect.ImmutableSet.toImmutableSet;
 
@@ -15,7 +14,6 @@ import static com.google.common.collect.ImmutableSet.toImmutableSet;
  * @see ie.gmit.sw.similarity.minhash.MinHash
  */
 public class HashGenerator {
-
 
     private final int numHashes;
 
@@ -33,5 +31,9 @@ public class HashGenerator {
                 .limit(numHashes)
                 .boxed()
                 .collect(toImmutableSet());
+    }
+
+    public int getNumHashes() {
+        return numHashes;
     }
 }

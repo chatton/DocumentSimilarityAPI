@@ -1,12 +1,13 @@
 package ie.gmit.sw.similarity.indexes;
 
-import com.google.common.collect.ImmutableList;
 import ie.gmit.sw.documents.Document;
 
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
+import static com.google.common.collect.ImmutableList.toImmutableList;
 
 /**
  * CachingSimilarityIndex is a wrapper class around a {@link SimilarityIndex}
@@ -44,9 +45,9 @@ public class CachingSimilarityIndex implements SimilarityIndex {
     @Override
     public double computeIndex(final List<Document> documents) {
         final List<Integer> documentHashCodes = documents.stream()
-                .sorted(Comparator.comparingInt(Document::hashCode))
-                .map(Document::hashCode)
-                .collect(ImmutableList.toImmutableList());
+                .sorted(Comparator.comparingInt(Document::id))
+                .map(Document::id)
+                .collect(toImmutableList());
 
         /*
         by sorting the documents before checking it allows us to

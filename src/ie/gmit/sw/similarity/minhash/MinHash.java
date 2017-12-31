@@ -1,8 +1,10 @@
 package ie.gmit.sw.similarity.minhash;
 
+import com.google.common.collect.ImmutableList;
 import ie.gmit.sw.documents.Document;
 import ie.gmit.sw.similarity.shingles.Shingle;
 
+import java.util.Collection;
 import java.util.List;
 
 /**
@@ -12,10 +14,10 @@ import java.util.List;
  * @see ie.gmit.sw.similarity.indexes.JaacardIndex
  * @see Shingle
  */
-public class MinHash  {
+public class MinHash {
 
     private final int hash;
-    private final List<Shingle> shingles;
+    private final Collection<Shingle> shingles;
     private final Document document;
 
     /**
@@ -25,9 +27,9 @@ public class MinHash  {
      * @param shingles the shingles
      * @param document the document
      */
-    public MinHash(final int hash, final List<Shingle> shingles, final Document document) {
+    public MinHash(final int hash, final Collection<Shingle> shingles, final Document document) {
         this.hash = hash;
-        this.shingles = shingles;
+        this.shingles = ImmutableList.copyOf(shingles);
         this.document = document;
     }
 

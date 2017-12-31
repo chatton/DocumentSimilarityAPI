@@ -18,7 +18,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.Set;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -37,7 +36,6 @@ import static ie.gmit.sw.util.CollectionUtils.intersection;
 public class JaacardIndex implements SimilarityIndex {
 
     private final Shinglizer shinglizer;
-    private final int numHashes;
     private final HashGenerator generator;
     private ExecutorService executor;
 
@@ -48,9 +46,12 @@ public class JaacardIndex implements SimilarityIndex {
      * @param numHashes  the number of hashes that will be used in the min hash algorithm.
      */
     public JaacardIndex(final Shinglizer shinglizer, final int numHashes) {
-        this.numHashes = numHashes;
+        this(shinglizer, new HashGenerator(numHashes));
+    }
+
+    public JaacardIndex(final Shinglizer shinglizer, final HashGenerator generator) {
         this.shinglizer = shinglizer;
-        generator = new HashGenerator(numHashes);
+        this.generator = generator;
     }
 
 
@@ -160,7 +161,7 @@ public class JaacardIndex implements SimilarityIndex {
     private Map<Integer, Collection<Integer>> calculateMinHashResults(final List<ShinglizeResult> shinglizeResults) {
         final Collection<Integer> hashes = generator.generate();
         final List<Future<MinHashResult>> minHashFutures = startMinHashTasks(shinglizeResults, hashes);
-        assert minHashFutures.size() == numHashes * shinglizeResults.size();
+        assert minHashFutures.size() == hashes.size() * shinglizeResults.size();
         return constructMinHashResultsMap(minHashFutures);
     }
 
@@ -184,7 +185,8 @@ public class JaacardIndex implements SimilarityIndex {
         final Collection<Integer> finalResults = intersection(ImmutableList.copyOf(minHashResults.values()));
         executor.shutdown();
 
+
         final double size = (double) finalResults.size();
-        return size / ((numHashes * documents.size()) - size);
+        return size / ((generator.getNumHashes() * documents.size()) - size);
     }
 }
