@@ -19,7 +19,7 @@ public abstract class FutureResult<T> {
      * @param document the document
      * @param result   the result
      */
-    public FutureResult(Document document, T result) {
+    public FutureResult(final Document document, final T result) {
         this.result = result;
         this.document = document;
     }
@@ -29,7 +29,7 @@ public abstract class FutureResult<T> {
      *
      * @return the document
      */
-    public Document getDocument() {
+    public Document document() {
         return document;
     }
 

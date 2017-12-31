@@ -25,6 +25,9 @@ package "Indexes" #DDFFDD {
 
     SimilarityIndex <|.. JaacardIndex
     SimilarityIndex <|.. CachingSimilarityIndex
+
+    class HashGenerator
+    JaacardIndex *- HashGenerator
 }
 
 package "Shingles" #DDDDFF {

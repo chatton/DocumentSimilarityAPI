@@ -6,6 +6,12 @@ import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
 
+/**
+ * Collection Utility class contains generic methods
+ * that operate on Collections.
+ *
+ * @author Cian Hatton
+ */
 public class CollectionUtils {
     /**
      * Takes a List of collections and returns a new collection
