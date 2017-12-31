@@ -9,7 +9,8 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * CachingSimilarityIndex caches any computed values and will
+ * CachingSimilarityIndex is a wrapper class around a {@link SimilarityIndex}
+ * implementation that caches any computed values and will
  * return the same values if the same documents are provided as
  * input parameters for the computeIndex method (irrespective of order).
  */
@@ -18,9 +19,22 @@ public class CachingSimilarityIndex implements SimilarityIndex {
     private final SimilarityIndex index;
     private final Map<List<Integer>, Double> cache;
 
+    /**
+     * Caches the results from the provided {@link SimilarityIndex}.
+     *
+     * @param index the {@link SimilarityIndex} that will do the computations.
+     */
     public CachingSimilarityIndex(final SimilarityIndex index) {
+        this(index, new HashMap<>());
+    }
+
+    /**
+     * @param index the {@link SimilarityIndex} that will do the computations.
+     * @param cache a map of already computed values that will start off as the cache.
+     */
+    public CachingSimilarityIndex(final SimilarityIndex index, final Map<List<Integer>, Double> cache) {
         this.index = index;
-        cache = new HashMap<>();
+        this.cache = new HashMap<>(cache);
     }
 
     /**
@@ -33,6 +47,7 @@ public class CachingSimilarityIndex implements SimilarityIndex {
                 .sorted(Comparator.comparingInt(Document::hashCode))
                 .map(Document::hashCode)
                 .collect(ImmutableList.toImmutableList());
+
         /*
         by sorting the documents before checking it allows us to
         take advantage of having cached results even if the documents
@@ -44,7 +59,7 @@ public class CachingSimilarityIndex implements SimilarityIndex {
         }
 
         final double result = index.computeIndex(documents);
-        cache.put(documentHashCodes, result);
+        cache.put(documentHashCodes, result); // save the result.
         return result;
     }
 }

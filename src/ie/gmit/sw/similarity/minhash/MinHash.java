@@ -7,7 +7,10 @@ import java.util.List;
 
 /**
  * The type Min hash. Used to calculate the min hash of a group
- * of shingles.
+ * of shingles. This value is used to compute the JaacardIndex.
+ *
+ * @see ie.gmit.sw.similarity.indexes.JaacardIndex
+ * @see Shingle
  */
 public class MinHash  {
 
@@ -18,7 +21,7 @@ public class MinHash  {
     /**
      * Instantiates a new Min hash.
      *
-     * @param hash     the hash
+     * @param hash     the hash value
      * @param shingles the shingles
      * @param document the document
      */
@@ -29,7 +32,9 @@ public class MinHash  {
     }
 
     /**
-     * Calculate min hash result.
+     * Calculates the min hash result. The min hash is the lowest value
+     * seen after looking at the hash of every {@link Shingle} provided
+     * with the hash constructor parameter.
      *
      * @return the min hash result
      */

@@ -6,7 +6,11 @@ import ie.gmit.sw.similarity.results.FutureResult;
 
 /**
  * The type MinHashResult. A Subclass of FutureResult
- * that returns an Integer as the result type.
+ * that returns an Integer as the result type. Used to hold onto
+ * the result of a MinHash calculation.
+ *
+ * @see MinHash
+ * @see ie.gmit.sw.similarity.indexes.JaacardIndex
  */
 public class MinHashResult extends FutureResult<Integer> {
     /**

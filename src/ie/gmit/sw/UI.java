@@ -160,7 +160,6 @@ class UI {
                     .url(url)
                     .tags(tags)
                     .build();
-
         } catch (IOException e) {
             System.out.println("There was an error creating a URL Document with the provided url [" + url + "]");
             System.out.println("There could be a problem with the URL itself or your internet connection.");

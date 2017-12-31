@@ -1,6 +1,5 @@
 package ie.gmit.sw.similarity.shingles;
 
-import com.google.common.collect.Iterables;
 import com.google.common.collect.Streams;
 import ie.gmit.sw.documents.Document;
 
@@ -9,6 +8,7 @@ import java.util.Collection;
 import java.util.List;
 
 import static com.google.common.collect.ImmutableList.toImmutableList;
+import static com.google.common.collect.Iterables.partition;
 
 /**
  * The type Word shinglizer. An implementation of {@link Shinglizer} that breaks
@@ -19,13 +19,14 @@ public class WordShinglizer implements Shinglizer {
     private final int numWords;
     private final String pattern;
 
+
     /**
      * Instantiates a new Word shinglizer.
      *
      * @param numWords the num words
      */
     public WordShinglizer(final int numWords) {
-        this(numWords, "[ -.,;:\\-]+");
+        this(numWords, "[ -.,;:\\-\"\\?\n]+");
     }
 
     /**
@@ -52,7 +53,7 @@ public class WordShinglizer implements Shinglizer {
         final String[] words = document.text().split(pattern);
 
         final List<Shingle> shingles = Streams.stream(
-                Iterables.partition(Arrays.asList(words), numWords)) // Stream<List<String>> of size numWords at a time.
+                partition(Arrays.asList(words), numWords)) // Stream<List<String>> of size numWords at a time.
                 .map(this::makeLowerCase) // make every word lower case to make shingles case insensitive
                 .map(Shingle::new) // construct a shingle from the lower case collection.
                 .collect(toImmutableList());

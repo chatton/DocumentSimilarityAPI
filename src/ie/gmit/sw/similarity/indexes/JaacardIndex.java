@@ -12,6 +12,7 @@ import ie.gmit.sw.similarity.shingles.ShinglizeResult;
 import ie.gmit.sw.similarity.shingles.Shinglizer;
 import ie.gmit.sw.util.Pair;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -25,9 +26,12 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 
+import static ie.gmit.sw.util.CollectionUtils.intersection;
+
 
 /**
- * The type Jaacard index.
+ * The type Jaacard index. Implements {@link SimilarityIndex}. Can compute the
+ * Jaacard Index of 2 or more provided {@link Document}s.
  *
  * @author Cian Hatton
  */
@@ -63,6 +67,8 @@ public class JaacardIndex implements SimilarityIndex {
 
 
     /**
+     * Helper method to extract a value from a {@link FutureResult} subclass.
+     *
      * @param future the future to get the result from.
      * @param <T>    a subclass of {@link FutureResult}
      * @return the result of a call to future#get or null
@@ -94,6 +100,7 @@ public class JaacardIndex implements SimilarityIndex {
      * @return a List of {@link ShinglizeResult}s
      */
     private List<ShinglizeResult> shinglize(final List<Document> documents) {
+        assert !executor.isShutdown();
         final List<Future<ShinglizeResult>> futures = documents.stream()
                 .map(doc -> executor.submit(() -> shinglizer.shinglize(doc))) // shinglize one document per thread
                 .collect(ImmutableList.toImmutableList());
@@ -106,7 +113,7 @@ public class JaacardIndex implements SimilarityIndex {
 
     /**
      * Takes a list of {@link ShinglizeResult}s and a Set of hashes and creates a list
-     * of {@link MinHashResult} futures which are used to calculate the JaacardIndex.
+     * of {@link MinHashResult} futures which are used to calculate the Jaacard Index.
      *
      * @param shinglizeResults the list of {@link ShinglizeResult}s that are used to compute {@link MinHashResult}s
      * @param hashes           the hashes used in the minhash algorithm.
@@ -114,6 +121,7 @@ public class JaacardIndex implements SimilarityIndex {
      */
     private List<Future<MinHashResult>> getMinHashFutures(final List<ShinglizeResult> shinglizeResults,
                                                           final Set<Integer> hashes) {
+        assert !executor.isShutdown();
         return shinglizeResults.stream()
                 .flatMap(shingleResult -> hashes.stream().map(hash -> new Pair<>(shingleResult, hash)))
                 .map(pair -> executor.submit(() -> makeMinHash(pair).calculate()))
@@ -140,26 +148,20 @@ public class JaacardIndex implements SimilarityIndex {
      * @return A map of Document to Collection of integers. Where the integers are the min hash results for the corresponding document.
      */
     private Map<Document, Collection<Integer>> buildMinHashFutureResults(final List<Future<MinHashResult>> futures) {
-        final Map<Document, Collection<Integer>> minHashResults = new HashMap<>();
+        final Map<Document, Collection<Integer>> results = new HashMap<>();
         for (final Future<MinHashResult> future : futures) {
             final MinHashResult result = getMinHashResult(future);
-            if (result == null) {
-                continue;
-            }
             final Document doc = result.getDocument();
-            if (!minHashResults.containsKey(doc)) {
-                minHashResults.put(doc, new HashSet<>());
-            }
-            final Collection<Integer> col = minHashResults.get(doc);
+            results.putIfAbsent(doc, new HashSet<>());
+            final Collection<Integer> col = results.get(doc);
             col.add(result.get());
         }
-
-        return ImmutableMap.copyOf(minHashResults);
+        return ImmutableMap.copyOf(results);
     }
 
     /**
-     * This method takes the result of all the shinglized documents
-     * and returns a map with the results of the min hash algorithm per document.
+     * This method takes the result of all the shinglized {@link Document}s
+     * and returns a map with the results of the min hash algorithm per {@link Document}.
      *
      * @param shinglizeResults the result of a call to {@link #shinglize(List)}
      * @return The map of document to collection of min hash results.
@@ -167,29 +169,15 @@ public class JaacardIndex implements SimilarityIndex {
     private Map<Document, Collection<Integer>> calculateMinHashResults(final List<ShinglizeResult> shinglizeResults) {
         final Set<Integer> hashes = generateHashes(numHashes);
         final List<Future<MinHashResult>> minHashFutures = getMinHashFutures(shinglizeResults, hashes);
+        assert minHashFutures.size() == numHashes * shinglizeResults.size();
         return buildMinHashFutureResults(minHashFutures);
     }
 
-    /**
-     * Takes a List of collections and returns a new collection
-     * which is the intersection of all provided collections.
-     *
-     * @param cols the List of collections.
-     * @param <T>  the type of the collections in the input list.
-     * @return the new collection which is the intersection of cols
-     */
-    private <T> Collection<T> intersection(final List<Collection<T>> cols) {
-        if (cols.isEmpty()) {
-            return ImmutableSet.of();
-        }
-        final Set<T> set = new HashSet<>(cols.get(0));
-        for (int i = 1; i < cols.size(); i++) {
-            set.retainAll(cols.get(i));
-        }
-        return ImmutableSet.copyOf(set);
-    }
 
     /**
+     * Computes the Jaacard Index of 2 or more {@link Document}s. The Jaacard Index
+     * will be between 0 and 1 and is a measure of {@link Document} similarity.
+     *
      * @param documents the documents to compute the Jaacard index of.
      * @return the Jaacard index of all the provided documents.
      * @throws IllegalArgumentException if fewer than 2 documents are provided.

@@ -4,7 +4,7 @@ import ie.gmit.sw.documents.Document;
 
 /**
  * The type Future result is an abstract base class.
- * It holds onto a Document and a Generic result.
+ * It holds onto a {@link Document} and a Generic result.
  *
  * @param <T> the type parameter
  */
