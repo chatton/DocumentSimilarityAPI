@@ -1,5 +1,6 @@
 package ie.gmit.sw.documents;
 
+import afu.org.checkerframework.checker.oigj.qual.O;
 import org.jsoup.Jsoup;
 import org.jsoup.select.Elements;
 
@@ -37,6 +38,11 @@ public class URLDocument implements Document {
     @Override
     public String text() {
         return stringDoc.text();
+    }
+
+    @Override
+    public int id() {
+        return hashCode();
     }
 
     @Override

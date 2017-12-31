@@ -1,5 +1,7 @@
 package ie.gmit.sw.documents;
 
+import afu.org.checkerframework.checker.oigj.qual.O;
+
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
@@ -38,6 +40,11 @@ public class FileDocument implements Document {
     @Override
     public int hashCode() {
         return stringDoc.hashCode();
+    }
+
+    @Override
+    public int id() {
+        return hashCode();
     }
 
     @Override

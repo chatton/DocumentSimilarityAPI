@@ -12,7 +12,6 @@ import ie.gmit.sw.similarity.shingles.ShinglizeResult;
 import ie.gmit.sw.similarity.shingles.Shinglizer;
 import ie.gmit.sw.util.Pair;
 
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -147,13 +146,13 @@ public class JaacardIndex implements SimilarityIndex {
      * @param futures the MinHashFutures created by {@link #getMinHashFutures(List, Set)}
      * @return A map of Document to Collection of integers. Where the integers are the min hash results for the corresponding document.
      */
-    private Map<Document, Collection<Integer>> buildMinHashFutureResults(final List<Future<MinHashResult>> futures) {
-        final Map<Document, Collection<Integer>> results = new HashMap<>();
+    private Map<Integer, Collection<Integer>> buildMinHashFutureResults(final List<Future<MinHashResult>> futures) {
+        final Map<Integer, Collection<Integer>> results = new HashMap<>();
         for (final Future<MinHashResult> future : futures) {
             final MinHashResult result = getMinHashResult(future);
-            final Document doc = result.getDocument();
-            results.putIfAbsent(doc, new HashSet<>());
-            final Collection<Integer> col = results.get(doc);
+            final int docId = result.getDocument().id();
+            results.putIfAbsent(docId, new HashSet<>());
+            final Collection<Integer> col = results.get(docId);
             col.add(result.get());
         }
         return ImmutableMap.copyOf(results);
@@ -166,7 +165,7 @@ public class JaacardIndex implements SimilarityIndex {
      * @param shinglizeResults the result of a call to {@link #shinglize(List)}
      * @return The map of document to collection of min hash results.
      */
-    private Map<Document, Collection<Integer>> calculateMinHashResults(final List<ShinglizeResult> shinglizeResults) {
+    private Map<Integer, Collection<Integer>> calculateMinHashResults(final List<ShinglizeResult> shinglizeResults) {
         final Set<Integer> hashes = generateHashes(numHashes);
         final List<Future<MinHashResult>> minHashFutures = getMinHashFutures(shinglizeResults, hashes);
         assert minHashFutures.size() == numHashes * shinglizeResults.size();
@@ -190,7 +189,7 @@ public class JaacardIndex implements SimilarityIndex {
 
         executor = Executors.newCachedThreadPool();
         final List<ShinglizeResult> shingleResults = shinglize(documents);
-        final Map<Document, Collection<Integer>> minHashResults = calculateMinHashResults(shingleResults);
+        final Map<Integer, Collection<Integer>> minHashResults = calculateMinHashResults(shingleResults);
         final Collection<Integer> finalResults = intersection(ImmutableList.copyOf(minHashResults.values()));
         executor.shutdown();
 

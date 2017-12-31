@@ -25,6 +25,11 @@ public class StringDocument implements Document {
     }
 
     @Override
+    public int id() {
+        return id;
+    }
+
+    @Override
     public int hashCode() {
         return id;
     }
