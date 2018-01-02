@@ -1,12 +1,14 @@
 package ie.gmit.sw;
 
-import java.util.Scanner;
+import ie.gmit.sw.users.ConsoleUser;
+import ie.gmit.sw.users.User;
+
 
 public class Runner {
 
     public static void main(String[] args) {
-        final Scanner sc = new Scanner(System.in);
-        final UI ui = new UI(sc);
+        final User user = new ConsoleUser();
+        final UI ui = new UI(user);
         ui.start();
     }
 }
