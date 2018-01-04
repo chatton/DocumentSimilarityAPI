@@ -66,7 +66,11 @@ public class UI {
 
     private void configureJaacardIndex() {
         final Shinglizer shinglizer = createShinglizer();
-        final int numMinHashes = promptForInt("Enter number of min hashes: ");
+        int numMinHashes;
+        do {
+            numMinHashes = promptForInt("Enter number of min hashes (must be > 0): ");
+        } while (numMinHashes <= 0);
+
         final SimilarityIndex jaacardIndex = new JaacardIndex(shinglizer, numMinHashes);
         final boolean wantsToCache = wantsToCache();
         if (wantsToCache) {
@@ -86,7 +90,10 @@ public class UI {
     }
 
     private Shinglizer createShinglizer() {
-        final int shingleSize = promptForInt("Enter shingle size: ");
+        int shingleSize;
+        do {
+            shingleSize = promptForInt("Enter a shingle size greater than 0: ");
+        } while (shingleSize <= 0);
         return new WordShinglizer(shingleSize);
     }
 
