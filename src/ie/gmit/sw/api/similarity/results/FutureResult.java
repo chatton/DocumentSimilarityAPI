@@ -1,12 +1,13 @@
-package ie.gmit.sw.similarity.results;
+package ie.gmit.sw.api.similarity.results;
 
-import ie.gmit.sw.documents.Document;
+import ie.gmit.sw.api.documents.Document;
 
 /**
  * The type Future result is an abstract base class.
  * It holds onto a {@link Document} and a Generic result.
  *
  * @param <T> the type parameter
+ * @author Cian Hatton
  */
 public abstract class FutureResult<T> {
 

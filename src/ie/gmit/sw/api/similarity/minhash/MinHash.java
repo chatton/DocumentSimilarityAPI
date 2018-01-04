@@ -1,17 +1,17 @@
-package ie.gmit.sw.similarity.minhash;
+package ie.gmit.sw.api.similarity.minhash;
 
 import com.google.common.collect.ImmutableList;
-import ie.gmit.sw.documents.Document;
-import ie.gmit.sw.similarity.shingles.Shingle;
+import ie.gmit.sw.api.documents.Document;
+import ie.gmit.sw.api.similarity.shingles.Shingle;
 
 import java.util.Collection;
-import java.util.List;
 
 /**
  * The type Min hash. Used to calculate the min hash of a group
  * of shingles. This value is used to compute the JaacardIndex.
  *
- * @see ie.gmit.sw.similarity.indexes.JaacardIndex
+ * @author Cian Hatton
+ * @see ie.gmit.sw.api.similarity.indexes.JaacardIndex
  * @see Shingle
  */
 public class MinHash {

@@ -1,4 +1,4 @@
-package ie.gmit.sw.util;
+package ie.gmit.sw.api.util;
 
 import com.google.common.collect.ImmutableSet;
 
@@ -22,6 +22,7 @@ public class CollectionUtils {
      * @return the new collection which is the intersection of cols
      */
     public static <T> Collection<T> intersection(final List<Collection<T>> cols) {
+
         if (cols.isEmpty()) {
             return ImmutableSet.of();
         }

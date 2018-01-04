@@ -1,16 +1,16 @@
-package ie.gmit.sw.similarity.indexes;
+package ie.gmit.sw.api.similarity.indexes;
 
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import ie.gmit.sw.documents.Document;
-import ie.gmit.sw.similarity.indexes.generator.HashGenerator;
-import ie.gmit.sw.similarity.minhash.MinHash;
-import ie.gmit.sw.similarity.minhash.MinHashResult;
-import ie.gmit.sw.similarity.results.FutureResult;
-import ie.gmit.sw.similarity.shingles.ShinglizeResult;
-import ie.gmit.sw.similarity.shingles.Shinglizer;
-import ie.gmit.sw.util.Pair;
+import ie.gmit.sw.api.documents.Document;
+import ie.gmit.sw.api.similarity.indexes.generator.HashGenerator;
+import ie.gmit.sw.api.similarity.minhash.MinHash;
+import ie.gmit.sw.api.similarity.minhash.MinHashResult;
+import ie.gmit.sw.api.similarity.results.FutureResult;
+import ie.gmit.sw.api.similarity.shingles.ShinglizeResult;
+import ie.gmit.sw.api.similarity.shingles.Shinglizer;
+import ie.gmit.sw.api.util.Pair;
 
 import java.util.Collection;
 import java.util.HashMap;
@@ -24,7 +24,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 
 import static com.google.common.collect.ImmutableList.toImmutableList;
-import static ie.gmit.sw.util.CollectionUtils.intersection;
+import static ie.gmit.sw.api.util.CollectionUtils.intersection;
 
 
 /**

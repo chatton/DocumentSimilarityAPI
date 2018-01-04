@@ -1,22 +1,23 @@
 package ie.gmit.sw;
 
 import com.google.common.collect.ImmutableSet;
-import ie.gmit.sw.documents.Document;
-import ie.gmit.sw.documents.FileDocument;
-import ie.gmit.sw.documents.StringDocument;
-import ie.gmit.sw.documents.URLDocument;
-import ie.gmit.sw.similarity.indexes.CachingSimilarityIndex;
-import ie.gmit.sw.similarity.indexes.JaacardIndex;
-import ie.gmit.sw.similarity.indexes.SimilarityIndex;
-import ie.gmit.sw.similarity.shingles.Shinglizer;
-import ie.gmit.sw.similarity.shingles.WordShinglizer;
+import ie.gmit.sw.api.documents.Document;
+import ie.gmit.sw.api.documents.FileDocument;
+import ie.gmit.sw.api.documents.StringDocument;
+import ie.gmit.sw.api.documents.URLDocument;
+import ie.gmit.sw.api.similarity.indexes.CachingSimilarityIndex;
+import ie.gmit.sw.api.similarity.indexes.JaacardIndex;
+import ie.gmit.sw.api.similarity.indexes.SimilarityIndex;
+import ie.gmit.sw.api.similarity.shingles.Shinglizer;
+import ie.gmit.sw.api.similarity.shingles.WordShinglizer;
 import ie.gmit.sw.users.User;
 
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Scanner;
 import java.util.Set;
+
+import static java.util.Arrays.asList;
 
 public class UI {
 
@@ -34,7 +35,7 @@ public class UI {
 
     public UI(final User user) {
         this.user = user;
-        running = true;
+        running = false;
     }
 
     private String promptForString(String prompt) {
@@ -155,17 +156,16 @@ public class UI {
     private Document createURLDocument() {
         final String url = promptForString("Enter the url you want to use (e.g. www.irishtimes.com)");
         final String tagString = promptForString("Enter the tags you want to include space separated on one line. (e.g. 'p h1 h2')");
-        final String[] tags = tagString.split("\\s+");
+        final List<String> tags = asList(tagString.split("\\s+"));
         try {
-            return new URLDocument.Builder()
-                    .url(url)
-                    .tags(tags)
-                    .build();
+            return new URLDocument(url, tags);
         } catch (IOException e) {
             user.writeLine("There was an error creating a URL Document with the provided url [" + url + "]");
             user.writeLine("There could be a problem with the URL itself or your internet connection.");
-            return null;
+        } catch (Exception e) {
+            user.writeLine("Unexpected error: " + e);
         }
+        return null;
     }
 
     private Document createStringDocument() {
@@ -179,6 +179,7 @@ public class UI {
 
 
     public void start() {
+        running = true;
         do {
             displayMenu();
             switch (promptForInt("Enter option: ")) {

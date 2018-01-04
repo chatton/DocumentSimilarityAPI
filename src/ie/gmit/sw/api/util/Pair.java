@@ -1,10 +1,11 @@
-package ie.gmit.sw.util;
+package ie.gmit.sw.api.util;
 
 /**
  * The type Pair. A Grouping of 2 types together in a single object.
  *
  * @param <T1> the type parameter
  * @param <T2> the type parameter
+ * @author Cian Hatton
  */
 public class Pair<T1, T2> {
     private final T1 t1;

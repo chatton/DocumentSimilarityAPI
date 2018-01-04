@@ -1,8 +1,12 @@
-package ie.gmit.sw.similarity.shingles;
+package ie.gmit.sw.shingles;
 
 import com.google.common.collect.ImmutableList;
-import ie.gmit.sw.documents.Document;
-import ie.gmit.sw.documents.FileDocument;
+import ie.gmit.sw.api.documents.Document;
+import ie.gmit.sw.api.documents.FileDocument;
+import ie.gmit.sw.api.similarity.shingles.Shingle;
+import ie.gmit.sw.api.similarity.shingles.ShinglizeResult;
+import ie.gmit.sw.api.similarity.shingles.Shinglizer;
+import ie.gmit.sw.api.similarity.shingles.WordShinglizer;
 import org.junit.Test;
 
 import java.io.IOException;
@@ -11,7 +15,6 @@ import java.util.List;
 import static org.junit.Assert.*;
 
 public class WordShinglizerTest {
-
 
     @Test
     public void shinglesAreSuccessfullyCreated() throws IOException {

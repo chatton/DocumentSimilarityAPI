@@ -1,16 +1,17 @@
-package ie.gmit.sw.similarity.minhash;
+package ie.gmit.sw.api.similarity.minhash;
 
 
-import ie.gmit.sw.documents.Document;
-import ie.gmit.sw.similarity.results.FutureResult;
+import ie.gmit.sw.api.documents.Document;
+import ie.gmit.sw.api.similarity.results.FutureResult;
 
 /**
  * The type MinHashResult. A Subclass of FutureResult
  * that returns an Integer as the result type. Used to hold onto
  * the result of a MinHash calculation.
  *
+ * @author Cian Hatton
  * @see MinHash
- * @see ie.gmit.sw.similarity.indexes.JaacardIndex
+ * @see ie.gmit.sw.api.similarity.indexes.JaacardIndex
  */
 public class MinHashResult extends FutureResult<Integer> {
     /**

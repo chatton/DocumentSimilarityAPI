@@ -1,4 +1,4 @@
-package ie.gmit.sw.similarity.indexes.generator;
+package ie.gmit.sw.api.similarity.indexes.generator;
 
 import java.util.Collection;
 import java.util.Random;
@@ -10,8 +10,8 @@ import static com.google.common.collect.ImmutableSet.toImmutableSet;
  * in the min hash algorithm.
  *
  * @author Cian Hatton
- * @see ie.gmit.sw.similarity.indexes.JaacardIndex
- * @see ie.gmit.sw.similarity.minhash.MinHash
+ * @see ie.gmit.sw.api.similarity.indexes.JaacardIndex
+ * @see ie.gmit.sw.api.similarity.minhash.MinHash
  */
 public class HashGenerator {
 
@@ -22,9 +22,9 @@ public class HashGenerator {
     }
 
     /**
-     * Generates a set of pseudo-random numbers.
+     * Generates a collection of pseudo-random numbers.
      *
-     * @return a Collection of pseudo-random boxed integers.
+     * @return a Collection of pseudo-random unique boxed integers.
      */
     public Collection<Integer> generate() {
         return new Random().ints()

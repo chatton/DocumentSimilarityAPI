@@ -1,10 +1,13 @@
-package ie.gmit.sw.similarity.shingles;
+package ie.gmit.sw.api.similarity.shingles;
 
 import java.util.Collection;
 
 /**
  * The type Shingle. Represents a group of words.
- * Only the hashCode is stored.
+ *
+ * @author Cian Hatton
+ * @see Shinglizer
+ * @see ShinglizeResult
  */
 public class Shingle {
 

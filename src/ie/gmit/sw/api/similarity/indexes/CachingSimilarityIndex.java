@@ -1,6 +1,6 @@
-package ie.gmit.sw.similarity.indexes;
+package ie.gmit.sw.api.similarity.indexes;
 
-import ie.gmit.sw.documents.Document;
+import ie.gmit.sw.api.documents.Document;
 
 import java.util.Comparator;
 import java.util.HashMap;
@@ -14,6 +14,8 @@ import static com.google.common.collect.ImmutableList.toImmutableList;
  * implementation that caches any computed values and will
  * return the same values if the same documents are provided as
  * input parameters for the computeIndex method (irrespective of order).
+ *
+ * @author Cian Hatton
  */
 public class CachingSimilarityIndex implements SimilarityIndex {
 

@@ -1,8 +1,10 @@
-package ie.gmit.sw.documents;
+package ie.gmit.sw.api.documents;
 
 /**
- * The type String document. A StringDocument is a {@link Document} subclass
+ * The type String document. A StringDocument is a {@link Document} implementation
  * created from a String.
+ *
+ * @author Cian Hatton
  */
 public class StringDocument implements Document {
 

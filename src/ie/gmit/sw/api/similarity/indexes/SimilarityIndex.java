@@ -1,9 +1,15 @@
-package ie.gmit.sw.similarity.indexes;
+package ie.gmit.sw.api.similarity.indexes;
 
-import ie.gmit.sw.documents.Document;
+import ie.gmit.sw.api.documents.Document;
 
 import java.util.List;
 
+/**
+ * A Similarity Index can compute an index between 0 and 1
+ * which representds the similarity between a list of {@link Document}s.
+ *
+ * @author Cian Hatton
+ */
 public interface SimilarityIndex {
     /**
      * Computes a value between 0 and 1 indicating the similarity

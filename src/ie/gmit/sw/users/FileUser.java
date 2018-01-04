@@ -47,7 +47,7 @@ public class FileUser implements User {
         try {
             return reader.readLine();
         } catch (IOException e) {
-            return null;
+            return "";
         }
     }
 }

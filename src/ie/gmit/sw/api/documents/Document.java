@@ -1,7 +1,9 @@
-package ie.gmit.sw.documents;
+package ie.gmit.sw.api.documents;
 
 /**
  * The interface Document.
+ *
+ * @author Cian Hatton
  */
 public interface Document {
     /**

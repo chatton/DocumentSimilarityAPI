@@ -1,18 +1,20 @@
-package ie.gmit.sw.similarity.shingles;
+package ie.gmit.sw.api.similarity.shingles;
 
 import com.google.common.collect.Streams;
-import ie.gmit.sw.documents.Document;
+import ie.gmit.sw.api.documents.Document;
 
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 
 import static com.google.common.collect.ImmutableList.toImmutableList;
 import static com.google.common.collect.Iterables.partition;
+import static java.util.Arrays.asList;
 
 /**
  * The type Word shinglizer. An implementation of {@link Shinglizer} that breaks
  * up a {@link Document} into multiple {@link Shingle}s.
+ *
+ * @author Cian Hatton
  */
 public class WordShinglizer implements Shinglizer {
 
@@ -53,7 +55,7 @@ public class WordShinglizer implements Shinglizer {
         final String[] words = document.text().split(pattern);
 
         final List<Shingle> shingles = Streams.stream(
-                partition(Arrays.asList(words), numWords)) // Stream<List<String>> of size numWords at a time.
+                partition(asList(words), numWords)) // Stream<List<String>> of size numWords at a time.
                 .map(this::makeLowerCase) // make every word lower case to make shingles case insensitive
                 .map(Shingle::new) // construct a shingle from the lower case collection.
                 .collect(toImmutableList());

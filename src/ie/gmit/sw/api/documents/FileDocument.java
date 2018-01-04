@@ -1,6 +1,4 @@
-package ie.gmit.sw.documents;
-
-import afu.org.checkerframework.checker.oigj.qual.O;
+package ie.gmit.sw.api.documents;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -11,6 +9,8 @@ import java.util.stream.Stream;
 /**
  * The type FileDocument. A FileDocument is a {@link Document} implementation
  * created from a file.
+ *
+ * @author Cian Hatton
  */
 public class FileDocument implements Document {
 
