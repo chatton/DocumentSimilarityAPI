@@ -1,0 +1,9 @@
+ie.gmit.sw
+ie.gmit.sw.api.documents
+ie.gmit.sw.api.similarity.indexes
+ie.gmit.sw.api.similarity.indexes.generator
+ie.gmit.sw.api.similarity.minhash
+ie.gmit.sw.api.similarity.results
+ie.gmit.sw.api.similarity.shingles
+ie.gmit.sw.users
+ie.gmit.sw.api.util
